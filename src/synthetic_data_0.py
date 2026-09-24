@@ -163,6 +163,9 @@ class DetectorSimulator:
         simulated_detections.sort(key=lambda x: x['frame'])
         return simulated_detections
 
+
+
+
 def plot_trajectory_from_data(data: List[Dict[str, Any]], img_width: int, img_height: int, target_id: int = 1):
     """
     Plots the trajectory of a specific object based on the generated synthetic data.
@@ -235,28 +238,28 @@ def plot_trajectory_from_data(data: List[Dict[str, Any]], img_width: int, img_he
 
 
 
+
+
 if __name__ == "__main__":
     W, H = 1000, 800
-    
-    # Configuramos o gerador para forçar uma oclusão mais previsível para o plot
-    # Aumentamos a probabilidade para garantir que ela ocorra e dure 15 frames
+
+    # Set generator to force occlusion more likely for the plot (higher prob and 15 frames duration)
     generator = SyntheticTrackerGenerator(
         num_frames=60, 
-        num_objects=1,      # Apenas 1 objeto para o gráfico ficar limpo
+        num_objects=1,   # only on object to cleaner graphic
         img_width=W, 
         img_height=H,
         max_speed=8.0, 
-        occlusion_prob_per_frame=0.08, # Alta chance para forçar o evento na simulação curta
-        occlusion_duration=15          # O objeto vai sumir por 15 quadros
+        occlusion_prob_per_frame=0.08, 
+        occlusion_duration=15         
     )
-    
-    # Gera as anotações
+
+    # genarates anotations
     gt_data = generator.generate()
     
-    # Plota consumindo o formato padrão MOT17 gerado pela nossa classe
+    # plot with standard mot data
     plot_trajectory_from_data(gt_data, img_width=W, img_height=H, target_id=1)
-
-
+    
 
     # Create an easy scenario: few objects, slow, no occlusion
     generator = SyntheticTrackerGenerator(
