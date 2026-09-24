@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from typing import List, Dict, Any
+from pathlib import Path
 
 class SyntheticTrackerGenerator:
     """
@@ -234,7 +235,15 @@ def plot_trajectory_from_data(data: List[Dict[str, Any]], img_width: int, img_he
         prev_x, prev_y, prev_frame = center_x, center_y, frame
 
     plt.grid(True, linestyle=':', alpha=0.6)
+
+    # Salva vetorizado (PDF/SVG) ou raster de alta definição (PNG)
+    out_dir = Path("outputs/part0")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    plt.savefig(out_dir / "synthethic_data_plot_occlusion.png", dpi=300, bbox_inches="tight")
+
     plt.show()
+    plt.close(fig)
 
 
 
