@@ -11,14 +11,16 @@ class SyntheticTrackerGenerator:
     Generates synthetic ground truth tracks (bounding boxes representing ellipses/pedestrians).
     Simulates objects moving in a 2D space with configurable speed and occlusion.
     """
-    def __init__(self, 
-                 num_frames: int = 100, 
-                 num_objects: int = 5, 
-                 img_width: int = 1920, 
-                 img_height: int = 1080,
-                 max_speed: float = 5.0,
-                 occlusion_prob_per_frame: float = 0.02, # Chance of starting an occlusion
-                 occlusion_duration: int = 10):          # N frames the object stays occluded
+    def __init__(
+        self, 
+        num_frames: int = 100, 
+        num_objects: int = 5, 
+        img_width: int = 1920, 
+        img_height: int = 1080,
+        max_speed: float = 5.0,
+        occlusion_prob_per_frame: float = 0.02, # Chance of starting an occlusion
+        occlusion_duration: int = 10 # N frames the object stays occluded
+    ):
         self.num_frames = num_frames
         self.num_objects = num_objects
         self.img_width = img_width
@@ -100,12 +102,14 @@ class DetectorSimulator:
     Takes ground truth detections and purposely degrades them to simulate a real detector.
     It drops boxes, adds coordinate noise, and injects false positives.
     """
-    def __init__(self, 
-                 drop_prob: float = 0.1, 
-                 noise_std: float = 5.0, 
-                 fp_per_frame: int = 2,
-                 img_width: int = 1920,
-                 img_height: int = 1080):
+    def __init__(
+        self, 
+        drop_prob: float = 0.1, 
+        noise_std: float = 5.0, 
+        fp_per_frame: int = 2,
+        img_width: int = 1920,
+        img_height: int = 1080
+    ):
         self.drop_prob = drop_prob
         self.noise_std = noise_std
         self.fp_per_frame = fp_per_frame
@@ -201,8 +205,15 @@ def plot_trajectory_from_data(data: List[Dict[str, Any]], img_width: int, img_he
         center_y = curr_y + h / 2
 
         # Draw the bounding box
-        rect = patches.Rectangle((curr_x, curr_y), w, h, 
-                                 linewidth=1, edgecolor='blue', facecolor='none', alpha=0.3)
+        rect = patches.Rectangle(
+            (curr_x, curr_y),
+            w,
+            h,
+            linewidth=1,
+            edgecolor='blue',
+            facecolor='none',
+            alpha=0.3
+        )
         ax.add_patch(rect)
         
         # Draw the center point
@@ -213,7 +224,7 @@ def plot_trajectory_from_data(data: List[Dict[str, Any]], img_width: int, img_he
             frame_gap = frame - prev_frame
             if frame_gap > 1:
                 # OCLUSÃO DETECTADA: O objeto sumiu por 'frame_gap - 1' quadros
-                ax.plot([prev_x, center_x], [prev_y, center_y], 
+                ax.plot([prev_x, center_x], [prev_y, center_y], # type: ignore
                         'r--', linewidth=2, label=f'Ocluído por {frame_gap - 1} quadros')
                 
                 # Anotação no gráfico
@@ -225,7 +236,7 @@ def plot_trajectory_from_data(data: List[Dict[str, Any]], img_width: int, img_he
                         bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
             else:
                 # Movimento contínuo normal
-                ax.plot([prev_x, center_x], [prev_y, center_y], 'b-', alpha=0.6)
+                ax.plot([prev_x, center_x], [prev_y, center_y], 'b-', alpha=0.6) # type: ignore
                 
         # Handle legend (prevent duplicate labels)
         handles, labels = plt.gca().get_legend_handles_labels()
@@ -275,7 +286,7 @@ if __name__ == "__main__":
         num_frames=50, 
         num_objects=3, 
         max_speed=2.0, 
-        occlusion_prob=0.0
+        occlusion_prob_per_frame=0.0
     )
     
     # Generate the Ground Truth
