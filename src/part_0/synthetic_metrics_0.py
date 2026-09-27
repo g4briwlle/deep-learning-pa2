@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 from scipy.optimize import linear_sum_assignment
-from synthetic_data_0 import *
+from .synthetic_data_0 import *
 import sys
 # Força o terminal a não quebrar caracteres em português
 if sys.platform == "win32":
@@ -145,8 +145,7 @@ def run_synthetic_tests():
     print(f"\nCaso (B) Troca de Identidades no frame {frame_k}:")
     print(f"Expectativa: O rastreador inverteu 2 objetos. Esperado IDSW = 2.")
     print(f"Resultado : IDF1 = {res_b['IDF1']:.2f} | IDSW = {res_b['IDSW']}")
-    print(f"-> Explicação: O IDF1 cai porque a métrica global só permite casar o GT 1 "
-          f"com o Pred 1 OU Pred 2, penalizando a metade do vídeo que ficou invertida.")
+    print(f"-> Explicação: O IDF1 cai porque a métrica global só permite casar o GT 1 com o Pred 1 OU Pred 2, penalizando a metade do vídeo que ficou invertida.")
 
     # case 3: one track split in half
     # difers a switch from a tracking loss
@@ -160,9 +159,7 @@ def run_synthetic_tests():
     print(f"\nCaso (C) Track Partida no frame {frame_k}:")
     print(f"Expectativa: O objeto 1 virou o objeto 99. Esperado IDSW = 1.")
     print(f"Resultado : IDF1 = {res_c['IDF1']:.2f} | IDSW = {res_c['IDSW']}")
-    print(f"-> Explicação: Note que o IDF1 de (C) difere de (B). Na quebra (C), o objeto 2 ficou intacto, "
-          f"e o objeto 1 perdeu metade de seus True Positives (que viraram IDFP e IDFN para a track 99). "
-          f"Já na troca (B), DOIS objetos sofreram penalidade, tornando a queda de IDF1 em (B) mais severa do que em (C).")
+    print(f"-> Explicação: Note que o IDF1 de (C) difere de (B). Na quebra (C), o objeto 2 ficou intacto, e o objeto 1 perdeu metade de seus True Positives (que viraram IDFP e IDFN para a track 99). Já na troca (B), DOIS objetos sofreram penalidade, tornando a queda de IDF1 em (B) mais severa do que em (C).")
 
 if __name__ == "__main__":
     run_synthetic_tests()
