@@ -13,6 +13,7 @@ __pycache__/
 
 
 *.zip
+mot_cache/
 
 # C extensions
 *.so
