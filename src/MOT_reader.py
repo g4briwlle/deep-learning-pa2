@@ -1,99 +1,179 @@
+"""Module to read data from the MOT zip file using a memory-mapped cache"""
+
 import os
+import io
+import zipfile
 import torch
 import pandas as pd
-from torch.utils.data import Dataset
+import numpy as np
+from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
-from torch.utils.data import DataLoader
 from PIL import Image
-import io
-from PIL import Image
-import zipfile
 import sys
-# Força o terminal a não quebrar caracteres em português
+
+# Force terminal encoding
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
 
 class MOTSequenceDataset(Dataset):
-    def __init__(self, zip_path, seq_name, seq_length=8, transform=None):
+    def __init__(self, zip_path, seq_name, seq_length=8, transform=None, cache_dir="./mot_cache"):
         """
-        zip_path: Caminho para o arquivo ZIP principal (ex: 'MOT17.zip').
-        seq_name: Caminho interno da sequência no ZIP (ex: 'MOT17/train/MOT17-04-FRCNN').
+        zip_path: Path to the main ZIP file (e.g., 'MOT17.zip').
+        seq_name: Internal sequence path (e.g., 'MOT17/train/MOT17-04-FRCNN').
         seq_length: Time window (T) the RNN will process at once.
-        transform: Torchvision transforms (e.g., resize and tensor conversion).
+        transform: Torchvision transforms (applied dynamically on __getitem__).
+        cache_dir: Directory where the memory-mapped file and indexing CSV will be saved.
         """
         self.zip_path = zip_path
         self.seq_name = seq_name
         self.seq_length = seq_length
+        self.cache_dir = cache_dir
         
-        # Convolutional models require fixed-size images. 128x64 is standard for pedestrians.
+        # Ensure cache directory exists
+        os.makedirs(self.cache_dir, exist_ok=True)
+        
+        # Unique names for the cache files based on the sequence
+        safe_seq_name = seq_name.replace("/", "_")
+        self.mmap_path = os.path.join(self.cache_dir, f"{safe_seq_name}_crops.dat")
+        self.df_cache_path = os.path.join(self.cache_dir, f"{safe_seq_name}_metadata.csv")
+
+        # Transform logic: ToTensor automatically converts numpy arrays [0, 255] to [0.0, 1.0]
+        # Resize is intentionally omitted here because it will be done ONCE during caching
         if transform is None:
             self.transform = transforms.Compose([
-                transforms.Resize((128, 64)),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             ])
         else:
             self.transform = transform
 
-        # Ler o ground truth (gt.txt) diretamente de dentro do ZIP
-        gt_internal_path = f"{seq_name}/gt/gt.txt"
+        # If cache doesn't exist, we build it. This runs only ONCE.
+        if not os.path.exists(self.mmap_path) or not os.path.exists(self.df_cache_path):
+            self._build_cache()
+
+        # Load the cached metadata
+        self.df = pd.read_csv(self.df_cache_path)
+        self.total_crops = len(self.df)
+
+        # Open the memory-mapped file in READ-ONLY mode ('r')
+        # This consumes virtually 0 initial RAM. Data is paged from disk when accessed.
+        self.mmap_data = np.memmap(
+            self.mmap_path,
+            dtype=np.uint8,
+            mode='r',
+            shape=(self.total_crops, 128, 64, 3) # (N, Height, Width, Channels)
+        )
+
+        self._prepare_sequences()
+
+    def _build_cache(self):
+        """
+        Extracts images from the ZIP, crops bounding boxes, resizes them,
+        and saves raw pixel data sequentially into a binary memmap file.
+        """
+        print(f"Building cache for {self.seq_name}... This will take a few minutes but runs only once.")
+        
+        gt_internal_path = f"{self.seq_name}/gt/gt.txt"
         cols = ['frame', 'id', 'bb_left', 'bb_top', 'bb_width', 'bb_height', 'conf', 'class', 'visibility']
         
         with zipfile.ZipFile(self.zip_path, 'r') as z:
             with z.open(gt_internal_path) as f:
                 df = pd.read_csv(f, names=cols)
 
-        # Filter data: In MOT17, class 1 represents 'pedestrian'
-        df = df[df['class'] == 1]
+        # Filter for pedestrians (class == 1) and valid visibility if desired
+        df = df[df['class'] == 1].copy()
         
-        # Group by identity (ID) to create temporal sequences of the same person
+        # Sort by frame and ID to establish a predictable processing order
+        df = df.sort_values(by=['frame', 'id']).reset_index(drop=True)
+        total_crops = len(df)
+
+        # Create a writable memory map file
+        mmap_writer = np.memmap(
+            self.mmap_path,
+            dtype=np.uint8,
+            mode='w+', # Create or overwrite
+            shape=(total_crops, 128, 64, 3)
+        )
+
+        resize_op = transforms.Resize((128, 64))
+
+        # We group by 'frame' to drastically speed up processing.
+        # This prevents opening the same frame from the ZIP multiple times.
+        with zipfile.ZipFile(self.zip_path, 'r') as z:
+            for frame_idx, (frame, group) in enumerate(df.groupby('frame')):
+                img_name = f"{int(frame):06d}.jpg"
+                img_internal_path = f"{self.seq_name}/img1/{img_name}"
+                
+                try:
+                    with z.open(img_internal_path) as f:
+                        img_bytes = f.read()
+                        image = Image.open(io.BytesIO(img_bytes)).convert('RGB')
+                except KeyError:
+                    print(f"Warning: Could not find image {img_internal_path} in ZIP. Skipping frame.")
+                    continue
+
+                # Crop and store every pedestrian in this frame
+                for original_idx, row in group.iterrows():
+                    left = max(0, int(row['bb_left']))
+                    top = max(0, int(row['bb_top']))
+                    right = int(left + row['bb_width'])
+                    bottom = int(top + row['bb_height'])
+                    
+                    # Prevent degenerate bounding boxes
+                    right = max(left + 1, right)
+                    bottom = max(top + 1, bottom)
+                    
+                    crop = image.crop((left, top, right, bottom))
+                    crop = resize_op(crop)
+                    
+                    # Write the numpy array directly to the disk-backed memmap
+                    mmap_writer[original_idx] = np.array(crop, dtype=np.uint8)
+
+        # Flush changes to disk and close the writer
+        mmap_writer.flush()
+        del mmap_writer 
+
+        # Save an index mapping directly in the DataFrame
+        df['mmap_idx'] = df.index
+        df.to_csv(self.df_cache_path, index=False)
+        print("Cache built successfully!")
+
+    def _prepare_sequences(self):
+        """
+        Groups the pre-processed rows into sequences of length 'seq_length'.
+        Stores only the memory-map pointers (indices) to keep RAM usage low.
+        """
         self.sequences = []
-        
-        for person_id, group in df.groupby('id'):
-            # Sort by frame to ensure correct temporal order
+        for person_id, group in self.df.groupby('id'):
             group = group.sort_values('frame')
             
-            # Split the frames into chunks of size 'seq_length'
-            for i in range(0, len(group) - seq_length + 1, seq_length):
-                seq_chunk = group.iloc[i : i + seq_length]
-                self.sequences.append(seq_chunk)
+            for i in range(0, len(group) - self.seq_length + 1, self.seq_length):
+                seq_chunk = group.iloc[i : i + self.seq_length]
+                self.sequences.append({
+                    'mmap_indices': seq_chunk['mmap_idx'].values,
+                    'person_id': person_id
+                })
 
     def __len__(self):
         return len(self.sequences)
 
     def __getitem__(self, idx):
         """
-        Retrieves a sequence, crops the bounding boxes, and returns a Tensor
-        with shape (Time, Channels, Height, Width).
+        Fetches the sequence directly from the disk-backed memmap array.
         """
-        seq_chunk = self.sequences[idx]
-        crops = []
-        
-        # Get the person ID for this sequence chunk
-        person_id = seq_chunk.iloc[0]['id']
+        seq_info = self.sequences[idx]
+        indices = seq_info['mmap_indices']
+        person_id = seq_info['person_id']
 
-        # Abre o zip apenas uma vez por sequência para extrair os frames necessários
-        with zipfile.ZipFile(self.zip_path, 'r') as z:
-            for _, row in seq_chunk.iterrows():
-                img_name = f"{int(row['frame']):06d}.jpg"
-                img_internal_path = f"{self.seq_name}/img1/{img_name}"
-                
-                # Extrai a imagem do zip para a memória
-                with z.open(img_internal_path) as f:
-                    img_bytes = f.read()
-                    image = Image.open(io.BytesIO(img_bytes)).convert('RGB')
-                
-                # Calculate bounding box
-                left = max(0, int(row['bb_left']))
-                top = max(0, int(row['bb_top']))
-                right = int(left + row['bb_width'])
-                bottom = int(top + row['bb_height'])
-                
-                # Crop and transform
-                crop = image.crop((left, top, right, bottom))
-                crop_tensor = self.transform(crop)
-                crops.append(crop_tensor)
+        crops = []
+        for mmap_idx in indices:
+            # Slicing the memmap triggers the OS to page this specific data into RAM
+            raw_crop_np = self.mmap_data[mmap_idx]
+            
+            # Apply ToTensor and Normalize (ToTensor handles the numpy -> tensor conversion)
+            crop_tensor = self.transform(raw_crop_np)
+            crops.append(crop_tensor)
 
         # Stack into shape (seq_length, C, H, W)
         sequence_tensor = torch.stack(crops)
@@ -102,23 +182,20 @@ class MOTSequenceDataset(Dataset):
 
 
 ######### testing
+if __name__ == "__main__":
+    zip_path = "MOT17.zip"
+    seq_name = "MOT17/train/MOT17-04-FRCNN"
 
-# Aponte para o arquivo ZIP principal
-caminho_zip = "MOT17.zip"
-# Aponte para a sequência desejada dentro do ZIP
-nome_sequencia = "MOT17/train/MOT17-04-FRCNN"
+    # First run will take some time to build the .dat and .csv cache files.
+    # Subsequent runs will load instantly.
+    my_dataset = MOTSequenceDataset(zip_path=zip_path, seq_name=seq_name, seq_length=8)
+    print(f"Total sequences extracted: {len(my_dataset)}")
 
-# Instancie o Dataset modificado
-my_dataset = MOTSequenceDataset(zip_path=caminho_zip, seq_name=nome_sequencia, seq_length=8)
-print(f"Total sequences extracted: {len(my_dataset)}")
+    # You can now safely increase num_workers without I/O blocking
+    my_dataloader = DataLoader(my_dataset, batch_size=4, shuffle=True, num_workers=2)
 
-# Crie o DataLoader
-my_dataloader = DataLoader(my_dataset, batch_size=4, shuffle=True)
-
-# Loop through one batch to verify shapes
-for batch_idx, (image_sequences, person_ids) in enumerate(my_dataloader):
-    # image_sequences shape: (Batch, Time, Channels, Height, Width)
-    print(f"Batch {batch_idx}:")
-    print(f" - Image tensor shape: {image_sequences.shape}")
-    print(f" - Person IDs in this batch: {person_ids}")
-    break
+    for batch_idx, (image_sequences, person_ids) in enumerate(my_dataloader):
+        print(f"Batch {batch_idx}:")
+        print(f" - Image tensor shape: {image_sequences.shape}", '# (Batch, Time, Channels, Height, Width) ')
+        print(f" - Person IDs in this batch: {person_ids}")
+        break
