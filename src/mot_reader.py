@@ -1,40 +1,79 @@
 """Module to read data from the MOT zip file using a memory-mapped cache"""
 
-import os
-import io
-import zipfile
 import torch
 import pandas as pd
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
+
+import os
+import io
+import zipfile
 import sys
+from pathlib import Path
+
+from .config import DATA_DIR, CACHE_DIR, ZIP_PATH
 
 # Force terminal encoding
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
 
+TRAINING_VIDEOS_NUMBERS_LIST = [
+    2,
+    4,
+    5,
+    9,
+    10,
+    11,
+    13,
+]
+TEST_VIDEOS_NUMBER_LIST = list(set(range(1, 15)) - set(TRAINING_VIDEOS_NUMBERS_LIST))
+
 class MOTSequenceDataset(Dataset):
-    def __init__(self, zip_path, seq_name, seq_length=8, transform=None, cache_dir="./mot_cache"):
+    def __init__(
+        self,
+        train: bool,
+        video_index: int,
+        seq_length: int = 8,
+        transform: torch.nn.Module | None = None,
+        zip_path: Path = ZIP_PATH,
+        cache_dir: Path = CACHE_DIR,
+    ):
         """
-        zip_path: Path to the main ZIP file (e.g., 'MOT17.zip').
-        seq_name: Internal sequence path (e.g., 'MOT17/train/MOT17-04-FRCNN').
-        seq_length: Time window (T) the RNN will process at once.
+        train (bool): If True, loads training data. Otherwise, test data.
+        video_index (int): Index of video to use. Must be integer between 0 and 6, included.
+        seq_length (int): Time window (T) the RCNN will process at once.
         transform: Torchvision transforms (applied dynamically on __getitem__).
-        cache_dir: Directory where the memory-mapped file and indexing CSV will be saved.
+        zip_path (Path): Path to the main ZIP file (e.g., 'MOT17.zip'). Default is DATA_DIR / 'MOT17.zip'.
+        cache_dir (Path): Directory where the memory-mapped file and indexing CSV will be saved. Default is CACHE_DIR.
         """
+        if video_index < 0 or video_index > 6:
+            raise ValueError(f"`video_index` must be between 0 and 6, included")
+        
         self.zip_path = zip_path
-        self.seq_name = seq_name
         self.seq_length = seq_length
         self.cache_dir = cache_dir
+        
+        # Logic for getting correct video name
+        if train:
+            video_number = TRAINING_VIDEOS_NUMBERS_LIST[video_index]
+        else:
+            video_number = TEST_VIDEOS_NUMBER_LIST[video_index]
+        if video_number < 10:
+            video_number_str = f'0{video_number}'
+        else:
+            video_number_str = str(video_number)
+            
+        # Alwyas getting FRCNN
+        self.seq_name = f'MOT17/{'train' if train else 'test'}/MOT17-{video_number_str}-FRCNN'
         
         # Ensure cache directory exists
         os.makedirs(self.cache_dir, exist_ok=True)
         
         # Unique names for the cache files based on the sequence
-        safe_seq_name = seq_name.replace("/", "_")
+        safe_seq_name = self.seq_name.replace("/", "_")
         self.mmap_path = os.path.join(self.cache_dir, f"{safe_seq_name}_crops.dat")
         self.df_cache_path = os.path.join(self.cache_dir, f"{safe_seq_name}_metadata.csv")
 
@@ -102,7 +141,7 @@ class MOTSequenceDataset(Dataset):
         # This prevents opening the same frame from the ZIP multiple times.
         with zipfile.ZipFile(self.zip_path, 'r') as z:
             for frame_idx, (frame, group) in enumerate(df.groupby('frame')):
-                img_name = f"{int(frame):06d}.jpg"
+                img_name = f"{int(frame):06d}.jpg" # type: ignore
                 img_internal_path = f"{self.seq_name}/img1/{img_name}"
                 
                 try:
@@ -128,7 +167,7 @@ class MOTSequenceDataset(Dataset):
                     crop = resize_op(crop)
                     
                     # Write the numpy array directly to the disk-backed memmap
-                    mmap_writer[original_idx] = np.array(crop, dtype=np.uint8)
+                    mmap_writer[original_idx] = np.array(crop, dtype=np.uint8) # type: ignore
 
         # Flush changes to disk and close the writer
         mmap_writer.flush()
@@ -183,12 +222,14 @@ class MOTSequenceDataset(Dataset):
 
 ######### testing
 if __name__ == "__main__":
-    zip_path = "MOT17.zip"
     seq_name = "MOT17/train/MOT17-04-FRCNN"
 
     # First run will take some time to build the .dat and .csv cache files.
     # Subsequent runs will load instantly.
-    my_dataset = MOTSequenceDataset(zip_path=zip_path, seq_name=seq_name, seq_length=8)
+    my_dataset = MOTSequenceDataset(
+        train=True,
+        video_index=0
+    )
     print(f"Total sequences extracted: {len(my_dataset)}")
 
     # You can now safely increase num_workers without I/O blocking
