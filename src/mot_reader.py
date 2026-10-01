@@ -219,21 +219,44 @@ class MOTSequenceDataset(Dataset):
         
         return sequence_tensor, torch.tensor(person_id, dtype=torch.long)
 
+def get_dataloader(
+    train: bool,
+    video_index: int,
+    batch_size: int = 4,
+    shuffle : bool = True,
+    num_workers: int = 4,
+) -> DataLoader:
+    """
+    Creates the dataloader for given video.
+    
+    Args:
+        train (bool): If True, creates data loader for a training video
+        video_index (int): Index (0 to 6) of video to load.
+    
+    Returns:
+        DataLoader: The video dataloader.
+    """
+    # First run will take some time to build the .dat and .csv cache files.
+    # Subsequent runs will load instantly.
+    dataset = MOTSequenceDataset(
+        train=train,
+        video_index=video_index
+    )
+    print(f"Total sequences extracted: {len(dataset)}. Corresponds to video with approximately {len(dataset) * batch_size / 60} seconds.")
+
+    # You can now safely increase num_workers without I/O blocking
+    return DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers
+    )
 
 ######### testing
 if __name__ == "__main__":
-    seq_name = "MOT17/train/MOT17-04-FRCNN"
+    video_index = 1 # second video
 
-    # First run will take some time to build the .dat and .csv cache files.
-    # Subsequent runs will load instantly.
-    my_dataset = MOTSequenceDataset(
-        train=True,
-        video_index=0
-    )
-    print(f"Total sequences extracted: {len(my_dataset)}")
-
-    # You can now safely increase num_workers without I/O blocking
-    my_dataloader = DataLoader(my_dataset, batch_size=4, shuffle=True, num_workers=2)
+    my_dataloader = get_dataloader(True, video_index)
 
     for batch_idx, (image_sequences, person_ids) in enumerate(my_dataloader):
         print(f"Batch {batch_idx}:")
