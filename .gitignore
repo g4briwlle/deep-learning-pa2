@@ -4,16 +4,15 @@ prompt.md
 # Compressed data
 *.zip
 
+# Cached data
+mot_cache/
+
 # ----------------------------------------------------------------------
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
-
-
-*.zip
-mot_cache/
 
 # C extensions
 *.so
