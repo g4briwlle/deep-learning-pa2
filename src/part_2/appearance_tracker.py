@@ -126,11 +126,13 @@ class AppearanceTracker(Tracker):
 
         cost_matrix = 1.0 - cos_sim
 
-        # 3. Portão Geométrico de IoU (se as caixas estiverem no frame anterior)
+        # 3. Portão Geométrico Estrito de IoU
         ious = iou_matrix(tracks_df, frame_det_df)
-        # Se o IoU for 0 e a track estava ativa no quadro anterior, penaliza matching distante
-        # Mas permite matching por aparência pura caso tenha ficado ocluída por alguns quadros
-        gate_mask = (ious < self.iou_gate_threshold) & np.array([[self.tracks[tid]["misses"] == 0 for tid in track_ids]]).T
+        
+        # Só permite associação puramente por aparência (cosseno) se a track estiver OCLUÍDA (misses > 0).
+        # Se a track estava visível no quadro anterior (misses == 0), o IoU TEM QUE SER > 0.1, 
+        # senão penalizamos infinitamente para impedir o "salto" de um lado para o outro da tela.
+        gate_mask = (ious < 0.1) & np.array([[self.tracks[tid]["misses"] == 0 for tid in track_ids]]).T
         cost_matrix[gate_mask] = 1e5
 
         # 4. Hungarian Match

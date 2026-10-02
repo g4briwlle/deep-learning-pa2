@@ -33,14 +33,19 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 class AppearanceRNN(nn.Module):
     def __init__(self, emb_dim=128):
         super().__init__()
-        # Encoder pequeno e pré-treinado (ResNet18) - Permitido pelo regulamento
+        # Carrega a ResNet18 pré-treinada
         self.encoder = resnet18(weights=ResNet18_Weights.DEFAULT)
-        # Substitui a última camada (classificador do ImageNet) para dar a dimensão D exigida
+        
+        # 🚀 CONGELA O BACKBONE PARA VOAR NA CPU:
+        for param in self.encoder.parameters():
+            param.requires_grad = False
+            
+        # Apenas a camada final de projeção (fc) será treinada
         self.encoder.fc = nn.Linear(self.encoder.fc.in_features, emb_dim)
         
-        # Agregador recorrente (GRU) mantém o estado da aparência
+        # A GRU continua treinando normalmente
         self.rnn = nn.GRUCell(input_size=emb_dim, hidden_size=emb_dim)
-        
+
     def forward_cnn(self, x):
         """Passa o recorte (crop) de 128x64 pela CNN para extrair a aparência daquele instante."""
         return self.encoder(x)
@@ -52,7 +57,7 @@ class AppearanceRNN(nn.Module):
         return self.rnn(curr_emb, prev_hidden)
 
 # ==============================================================================
-# 2. TREINAMENTO REAL NOS DADOS MOT17
+# 2. TREINAMENTO REAL NOS DADOS MOT17   
 # ==============================================================================
 def train_model():
     print("Iniciando Treinamento da Trilha B com dados MOT17 reais...")
@@ -60,17 +65,19 @@ def train_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = AppearanceRNN(emb_dim=128).to(device)
     model.train()
+
+    trainable_params = [p for p in model.parameters() if p.requires_grad]
+    optimizer = torch.optim.Adam(trainable_params, lr=1e-3) # Pode usar lr um pouco maior (1e-3)
     
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
     # Enunciado exige Perda contrastiva ou triplet sobre as identidades do ground truth
     triplet_loss_fn = nn.TripletMarginLoss(margin=1.0, p=2)
     
     # Usa o dataloader do arquivo 'mot_reader.py' já feito no trabalho
     # Vídeo índice 3, seq_length controla a janela temporal
-    train_loader = get_dataloader(train=True, video_index=3, batch_size=16, shuffle=True)
+    train_loader = get_dataloader(train=True, video_index=0, batch_size=32, shuffle=True)
     
     loss_history = []
-    epochs = 6 # Baixo apenas para gerar a resposta rápida, na prática aumentar para 15-20
+    epochs = 10
     
     for epoch in range(epochs):
         epoch_loss = 0.0
