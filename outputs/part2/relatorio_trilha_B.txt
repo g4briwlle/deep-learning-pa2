@@ -1,0 +1,20 @@
+====================================================
+      RESULTADOS DA INTEGRAÇÃO - TRILHA B (RNN)     
+====================================================
+
+1. ARQUITETURA:
+   - Encoder: ResNet18 (cortada para emb_dim=128)
+   - Memória: GRUCell(128, 128)
+   - Loss Otimizada: TripletMarginLoss
+
+2. VANTAGEM SOBRE O BASELINE (PA1):
+   O baseline espacial perdia a identidade instantaneamente quando o IoU zerava (oclusão).
+   A Trilha B mantém o estado oculto h_t (memória de roupas, características).
+   Quando a detecção ressurge, o Hungarian Match associa corretamente pelo Cosseno > 0.4,
+   mitigando o ID Switch gerado pelo obstáculo.
+
+3. INTEGRAÇÃO NO TRACKER:
+   A matriz de custo passou de `(1 - IoU)` para `(1 - Cosseno)`.
+   O IoU passou a agir como Portão Geométrico: penalidade infinita (1e5) aplicada
+   onde o IoU é fisicamente impossível ou nulo em janelas adjacentes.
+   Custo Médio Final de Treinamento: 1.0300

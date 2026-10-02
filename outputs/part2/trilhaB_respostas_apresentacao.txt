@@ -1,0 +1,26 @@
+RESPOSTAS PARA A APRESENTACAO - TRILHA B (MEMORIA DE APARENCIA)
+=================================================================
+
+1. Como essa representacao (Trilha B) melhora o fracasso da parte 1?
+No rastreador ingênuo (Parte 1), a associacao dependia estritamente de IoU espacial.
+Quando um pedestre sofre oclusao (ex: passa atras de um poste), a sua bounding box desaparece.
+Ao reaparecer quadros depois, a posicao nova nao tem sobreposicao (IoU = 0) com a ultima 
+posicao conhecida. Isso causava instantaneamente um 'ID Switch' e fragmentava a track.
+Na Trilha B, a RNN acumula as caracteristicas visuais do alvo num vetor de aparencia.
+Mesmo com IoU zerado pela oclusao, quando o alvo reaparece, a similaridade de cosseno 
+entre a nova detecao e a memoria acumulada sera alta. O IoU passa a atuar apenas 
+como 'portao geometrico', impedindo associacoes fisicamente impossiveis, mas permitindo
+recuperar a identidade por meio da memoria visual mantida no estado oculto da RNN.
+
+2. O que quebra na fronteira entre janelas de T quadros (que o modelo do PA1 nao previa)?
+Devido ao tamanho do video, o Backpropagation Through Time (BPTT) e as inferencias sao feitas
+em janelas de T quadros. Quando uma janela termina, o grafo computacional da RNN e reiniciado.
+Se reiniciarmos ingenuamente, o estado oculto h_t (a memoria de aparencia) zera.
+Isso causa amnesia total no rastreador: todos os objetos ativos sofrerao ID Switch na 
+fronteira temporal, pois suas memorias foram limpas.
+
+Como costurar as identidades?
+Para evitar essa quebra, precisamos fazer a passagem dos tensores finais. Retiramos os estados 
+ocultos h_T da ultima iteracao da janela W_i, removemos do grafo de gradientes com .detach(), 
+e os injetamos como o estado inicial (h_0) das respectivas tracks na janela W_{i+1}. Isso 
+garante que a agregacao visual persista de forma ininterrupta pelo video inteiro.
