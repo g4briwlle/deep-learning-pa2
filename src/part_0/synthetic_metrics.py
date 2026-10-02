@@ -110,6 +110,49 @@ class CustomTrackerEvaluator:
         idf1 = (2 * idtp) / (2 * idtp + idfp + idfn) if (2 * idtp + idfp + idfn) > 0 else 0.0
 
         return {"IDF1": idf1, "IDSW": id_switches, "IDTP": idtp, "IDFN": idfn, "IDFP": idfp}
+    
+    def _tracks_to_predictions(self, tracks_by_frame: Dict[str, Dict[str, Any]], valid_frames: List[int] | None = None):
+        """
+        Transforms the expected output from a Tracker to this evaluator's format.
+        
+        Args:
+            tracks_by_frame: (Dict[str, Dict[str, Any]]): Infered tracks for each frame. Look at Tracker for details.
+            valid_frames (List[int] | None): List with valid frames. If None, all frames are valid. Default is None
+        
+        Returns:
+            Any: The infered tracks as predictions in the correct format for evaluation.
+        """
+        
+        predictions = []
+        for frame, tracks in tracks_by_frame.items():
+            if valid_frames is not None and frame not in valid_frames:
+                continue
+            for track_id, tr in tracks.items():
+                predictions.append({
+                    "frame": int(frame),
+                    "id": int(track_id),
+                    "bb_left": float(tr["bb_left"]),
+                    "bb_top": float(tr["bb_top"]),
+                    "bb_width": float(tr["bb_width"]),
+                    "bb_height": float(tr["bb_height"]),
+                })
+        return predictions
+    
+    def evaluate_from_tracker(self, ground_truth: Dict[str, Dict[str, Any]], tracks_by_frame: Dict[str, Dict[str, Any]], valid_frames: List[int] | None = None):
+        """
+        Transforms a Tracker and then run evaluation.
+        
+        Args:
+            tracks_by_frame: (Dict[str, Dict[str, Any]]): Infered tracks for each frame. Look at Tracker for details.
+            valid_frames (List[int] | None): List with valid frames. If None, all frames are valid. Default is None
+        
+        Returns:
+            Any: The infered tracks as predictions in the correct format for evaluation.
+        """
+        
+        predicted_tracks = self._tracks_to_predictions(tracks_by_frame)
+        
+        return self.evaluate(ground_truth, predicted_tracks)
 
 
 
