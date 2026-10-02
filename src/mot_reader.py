@@ -96,13 +96,8 @@ class MOTSequenceDataset(Dataset):
         self.total_crops = len(self.df)
 
         # Open the memory-mapped file in READ-ONLY mode ('r')
-        # This consumes virtually 0 initial RAM. Data is paged from disk when accessed.
-        self.mmap_data = np.memmap(
-            self.mmap_path,
-            dtype=np.uint8,
-            mode='r',
-            shape=(self.total_crops, 128, 64, 3) # (N, Height, Width, Channels)
-        )
+        # Lazy initialization: deixa como None aqui para o Windows conseguir serializar o dataset
+        self.mmap_data = None
 
         self._prepare_sequences()
 
@@ -201,16 +196,24 @@ class MOTSequenceDataset(Dataset):
         """
         Fetches the sequence directly from the disk-backed memmap array.
         """
+        # Abre o memmap apenas quando o worker realmente for ler o primeiro dado
+        if self.mmap_data is None:
+            self.mmap_data = np.memmap(
+                self.mmap_path,
+                dtype=np.uint8,
+                mode='r',
+                shape=(self.total_crops, 128, 64, 3)
+            )
         seq_info = self.sequences[idx]
         indices = seq_info['mmap_indices']
         person_id = seq_info['person_id']
 
         crops = []
         for mmap_idx in indices:
-            # Slicing the memmap triggers the OS to page this specific data into RAM
-            raw_crop_np = self.mmap_data[mmap_idx]
+            # Slicing the memmap and copying to memory to make it writable
+            raw_crop_np = self.mmap_data[mmap_idx].copy()
             
-            # Apply ToTensor and Normalize (ToTensor handles the numpy -> tensor conversion)
+            # Apply ToTensor and Normalize
             crop_tensor = self.transform(raw_crop_np)
             crops.append(crop_tensor)
 
