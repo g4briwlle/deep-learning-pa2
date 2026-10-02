@@ -3,6 +3,7 @@ import copy
 from scipy.optimize import linear_sum_assignment
 from .synthetic_data import *
 import sys
+from dataclasses import dataclass
 # Força o terminal a não quebrar caracteres em português
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
@@ -28,7 +29,13 @@ def calculate_iou(box1, box2):
         return 0.0
     return inter_area / union_area
 
-
+@dataclass
+class IdentityMetrics:
+    IDF1: float
+    IDSW: int
+    IDTP: int
+    IDFN: int
+    IDFP: int
 
 class CustomTrackerEvaluator:
     """
@@ -37,7 +44,7 @@ class CustomTrackerEvaluator:
     def __init__(self, iou_threshold=0.5):
         self.iou_threshold = iou_threshold
 
-    def evaluate(self, ground_truth, predictions):
+    def evaluate(self, ground_truth, predictions) -> IdentityMetrics:
         # Organize data by frame
         frames = sorted(list(set([d['frame'] for d in ground_truth])))
         gt_by_frame = {f: [] for f in frames}
@@ -109,7 +116,13 @@ class CustomTrackerEvaluator:
         
         idf1 = (2 * idtp) / (2 * idtp + idfp + idfn) if (2 * idtp + idfp + idfn) > 0 else 0.0
 
-        return {"IDF1": idf1, "IDSW": id_switches, "IDTP": idtp, "IDFN": idfn, "IDFP": idfp}
+        return IdentityMetrics(
+            IDF1=float(idf1),
+            IDSW=id_switches,
+            IDTP=int(idtp),
+            IDFN=int(idfn),
+            IDFP=int(idfp),
+        )
     
     def _tracks_to_predictions(self, tracks_by_frame: Dict[str, Dict[str, Any]], valid_frames: List[int] | None = None):
         """
@@ -138,7 +151,7 @@ class CustomTrackerEvaluator:
                 })
         return predictions
     
-    def evaluate_from_tracker(self, ground_truth: Dict[str, Dict[str, Any]], tracks_by_frame: Dict[str, Dict[str, Any]], valid_frames: List[int] | None = None):
+    def evaluate_from_tracker(self, ground_truth: List[Dict[str, Any]], tracks_by_frame: Dict[str, Dict[str, Any]], valid_frames: List[int] | None = None) -> IdentityMetrics:
         """
         Transforms a Tracker and then run evaluation.
         
@@ -150,7 +163,7 @@ class CustomTrackerEvaluator:
             Any: The infered tracks as predictions in the correct format for evaluation.
         """
         
-        predicted_tracks = self._tracks_to_predictions(tracks_by_frame)
+        predicted_tracks = self._tracks_to_predictions(tracks_by_frame, valid_frames)
         
         return self.evaluate(ground_truth, predicted_tracks)
 
