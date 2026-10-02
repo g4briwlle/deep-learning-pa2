@@ -2,10 +2,15 @@ import pandas as pd
 
 import copy
 from typing import Dict, Any
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class Tracker(ABC):
+    """
+    Abstract Tracker class. Implements the main methods and __init__ functionalities
+    every tracker should have for correct evaluation.
+    """
+    
     def _update_current_frame(self):
         self.current_frame += 1
         
@@ -16,6 +21,10 @@ class Tracker(ABC):
         self.current_frame = 0
     
     def reset_tracks(self):
+        """
+        Reset the entire process of updating tracks for each frame.
+        """
+        
         self.next_track_id = 0
         self.tracks = {}
         self._reset_frames()
@@ -34,7 +43,12 @@ class Tracker(ABC):
         
         self.reset_tracks()
         
+    @abstractmethod
     def update_tracks(self):
+        """
+        Updates the tracks_df for one frame. When running first time, just creates tracks.
+        """
+        
         pass
         
     def infer_tracks(self) -> Dict[str, Dict[str, Any]]:

@@ -63,14 +63,6 @@ class NaiveTracker(Tracker):
         return pd.DataFrame(rows, columns=self._TRACK_COLUMNS)
     
     def update_tracks(self):
-        """
-        Updates the tracks_df for one frame.
-        
-        Args:
-            tracks_df (pd.DataFrame): Dataframe with stored tracks so far.
-            frame_det_df (pd.DataFrame): The detector df for current frame.
-            """
-
         frame_number, frame_det_df = self._get_det_df_frame()
         self._update_current_frame()
         
