@@ -257,8 +257,54 @@ def plot_trajectory_from_data(data: List[Dict[str, Any]], img_width: int, img_he
     plt.close(fig)
 
 
-
-
+def generate_synthetic_detector(
+    occlusion_prob_per_frame: float,
+    num_frames: int = 50,
+    num_objects: int = 3,
+    max_speed: float = 2.0,
+    drop_percentage: float = 0.15,
+    noise: float = 3.0,
+    false_postives_per_frame: int = 1,
+) -> List[Dict[str, Any]]:
+    """
+    Creates the synthetic detector.
+    
+    Args:
+        occlusion_prob_per_frame (float): Probability of an object getting ocluded each frame.
+        num_frames (int): Number of frames to generate. Default is 50.
+        num_objects (int): Number of boxes to create. Default is 3.
+        max_speed (float): Max speed in which an object moves. Default is 2.0.
+        drop_percentage (float): Percentage of boxes that get dropped from ground truth. Default is 0.15.
+        noise (float): Noise injected on the image. Default is 3.0.
+        false_postives_per_frame (int): Number of false positivies injected on each frame. Default is 1.
+    
+    Returns:
+        List[Dict[str, Any]]: List with all the detections for all frames.
+    """
+    
+    
+    # Create an easy scenario: few objects, slow, no occlusion
+    generator = SyntheticTrackerGenerator(
+        num_frames = num_frames,
+        num_objects = num_objects,
+        max_speed = max_speed,
+        occlusion_prob_per_frame = occlusion_prob_per_frame
+    )
+    
+    # Generate the Ground Truth
+    gt_tracks = generator.generate()
+    print(f"Generated {len(gt_tracks)} Ground Truth bounding boxes.")
+    
+    # Degrade the Ground Truth using the Detector Simulator
+    simulator = DetectorSimulator(
+        drop_prob = drop_percentage,
+        noise_std = noise,
+        fp_per_frame = false_postives_per_frame,
+    )
+    
+    simulated_dets = simulator.simulate(gt_tracks)
+    
+    return simulated_dets
 
 if __name__ == "__main__":
     W, H = 1000, 800
@@ -280,25 +326,13 @@ if __name__ == "__main__":
     # plot with standard mot data
     plot_trajectory_from_data(gt_data, img_width=W, img_height=H, target_id=1)
     
-
-    # Create an easy scenario: few objects, slow, no occlusion
-    generator = SyntheticTrackerGenerator(
-        num_frames=50, 
-        num_objects=3, 
-        max_speed=2.0, 
-        occlusion_prob_per_frame=0.0
+    simulated_dets = generate_synthetic_detector(
+        0.0,
+        drop_percentage=0.15, # Discards 15% of the boxes
+        noise=3.0, # Adds minimal noise
+        false_postives_per_frame=1, # Injects 1 false positive per frame
     )
     
-    # Generate the Ground Truth
-    gt_tracks = generator.generate()
-    print(f"Generated {len(gt_tracks)} Ground Truth bounding boxes.")
-    
-    # Degrade the Ground Truth using the Detector Simulator
-    simulator = DetectorSimulator(
-        drop_prob=0.15,      # Discards 15% of the boxes
-        noise_std=3.0,       # Adds minimal noise
-        fp_per_frame=1       # Injects 1 false positive per frame
-    )
-    
-    simulated_dets = simulator.simulate(gt_tracks)
     print(f"Generated {len(simulated_dets)} Simulated Detections (with noise, drops, and FPs).")
+    
+    print(simulated_dets[0])
