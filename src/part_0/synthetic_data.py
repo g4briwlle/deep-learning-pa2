@@ -5,6 +5,12 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from typing import List, Dict, Any
 from pathlib import Path
+from dataclasses import dataclass
+
+@dataclass
+class GroundTruthAndDetections:
+    ground_truth: List[Dict[str, Any]]
+    detections: List[Dict[str, Any]]
 
 class SyntheticTrackerGenerator:
     """
@@ -257,7 +263,7 @@ def plot_trajectory_from_data(data: List[Dict[str, Any]], img_width: int, img_he
     plt.close(fig)
 
 
-def get_synthetic_detector(
+def get_synthetic_detections(
     occlusion_prob_per_frame: float,
     num_frames: int = 50,
     num_objects: int = 3,
@@ -265,9 +271,9 @@ def get_synthetic_detector(
     drop_percentage: float = 0.15,
     noise: float = 3.0,
     false_postives_per_frame: int = 1,
-) -> List[Dict[str, Any]]:
+) -> GroundTruthAndDetections:
     """
-    Creates the synthetic detector.
+    Creates the synthetic detector and returns its detections and ground truths.
     
     Args:
         occlusion_prob_per_frame (float): Probability of an object getting ocluded each frame.
@@ -304,7 +310,10 @@ def get_synthetic_detector(
     
     simulated_dets = simulator.simulate(gt_tracks)
     
-    return simulated_dets
+    return GroundTruthAndDetections(
+        ground_truth=gt_tracks,
+        detections=simulated_dets
+    )
 
 if __name__ == "__main__":
     W, H = 1000, 800
@@ -326,12 +335,12 @@ if __name__ == "__main__":
     # plot with standard mot data
     plot_trajectory_from_data(gt_data, img_width=W, img_height=H, target_id=1)
     
-    simulated_dets = get_synthetic_detector(
+    simulated_dets = get_synthetic_detections(
         0.0,
         drop_percentage=0.15, # Discards 15% of the boxes
         noise=3.0, # Adds minimal noise
         false_postives_per_frame=1, # Injects 1 false positive per frame
-    )
+    ).detections
     
     print(f"Generated {len(simulated_dets)} Simulated Detections (with noise, drops, and FPs).")
     

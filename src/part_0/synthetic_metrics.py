@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 from scipy.optimize import linear_sum_assignment
-from .synthetic_data_0 import *
+from .synthetic_data import *
 import sys
 # Força o terminal a não quebrar caracteres em português
 if sys.platform == "win32":
