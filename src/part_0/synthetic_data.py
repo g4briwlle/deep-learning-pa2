@@ -257,7 +257,7 @@ def plot_trajectory_from_data(data: List[Dict[str, Any]], img_width: int, img_he
     plt.close(fig)
 
 
-def generate_synthetic_detector(
+def get_synthetic_detector(
     occlusion_prob_per_frame: float,
     num_frames: int = 50,
     num_objects: int = 3,
@@ -326,7 +326,7 @@ if __name__ == "__main__":
     # plot with standard mot data
     plot_trajectory_from_data(gt_data, img_width=W, img_height=H, target_id=1)
     
-    simulated_dets = generate_synthetic_detector(
+    simulated_dets = get_synthetic_detector(
         0.0,
         drop_percentage=0.15, # Discards 15% of the boxes
         noise=3.0, # Adds minimal noise
