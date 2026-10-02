@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 from scipy.optimize import linear_sum_assignment
+from collections import defaultdict
 from .synthetic_data import *
 import sys
 from dataclasses import dataclass
@@ -46,14 +47,15 @@ class CustomTrackerEvaluator:
 
     def evaluate(self, ground_truth, predictions) -> IdentityMetrics:
         # Organize data by frame
-        frames = sorted(list(set([d['frame'] for d in ground_truth])))
-        gt_by_frame = {f: [] for f in frames}
-        pr_by_frame = {f: [] for f in frames}
+        gt_by_frame = defaultdict(list)
+        pr_by_frame = defaultdict(list)
         
         for d in ground_truth: 
             gt_by_frame[d['frame']].append(d)
         for d in predictions: 
             pr_by_frame[d['frame']].append(d)
+            
+        frames = sorted(list(set(gt_by_frame.keys()) | set(pr_by_frame.keys())))
 
         # exctract unique ids
         gt_ids = sorted(list(set([d['id'] for d in ground_truth])))

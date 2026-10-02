@@ -1,5 +1,4 @@
 import pandas as pd
-
 import copy
 from typing import Dict, Any
 from abc import ABC
@@ -7,6 +6,12 @@ from abc import ABC
 from ..part_0.synthetic_data import get_synthetic_detections
 from .hungarian_match import hungarian_match
 from ..tracker import Tracker
+
+import sys
+# Força o terminal a não quebrar caracteres em português
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
 
 
 class NaiveTracker(Tracker):
@@ -26,7 +31,6 @@ class NaiveTracker(Tracker):
         "last_frame",
         "misses",
     ]
-    
     
     def __init__(
         self,
@@ -68,6 +72,7 @@ class NaiveTracker(Tracker):
         
         # Convert tracks dict -> df only for the hungarian match
         tracks_df = self._tracks_to_df()
+        
         # Calculate the Hungarian match
         matches, _, unmatched_dets = hungarian_match(tracks_df, frame_det_df, self.iou_threshold)
 
@@ -108,15 +113,50 @@ class NaiveTracker(Tracker):
             if self.tracks[track_id]["misses"] >= self.max_age:
                 del self.tracks[track_id]
                 
-                
         self.final_tracks[frame_number] = copy.deepcopy(self.tracks)
 
+    def display_frame_state(self, frame_number: int) -> str:
+        """Retorna uma representação em string formatada do estado das tracks em um frame específico."""
+        if frame_number not in self.final_tracks or not self.final_tracks[frame_number]:
+            return f"[Frame {frame_number}] Nenhuma track ativa no momento."
+        
+        # Converte o dicionário interno para um DataFrame apenas para visualização
+        df_vis = pd.DataFrame.from_dict(self.final_tracks[frame_number], orient='index')
+        df_vis.index.name = 'Track_ID'
+        
+        # Formatação de colunas numéricas para melhor alinhamento
+        for col in ['bb_left', 'bb_top', 'bb_width', 'bb_height']:
+            if col in df_vis.columns:
+                df_vis[col] = df_vis[col].apply(lambda x: f"{x:.1f}")
+                
+        return f"ESTADO DAS TRACKS - FRAME {frame_number}:\n{df_vis.to_string()}"
+
+
 if __name__ == "__main__":
-    synthetic_detector = get_synthetic_detections(0).detections # no occlusion first
+    print("="*60)
+    print(" INICIANDO TESTE: NAIVE TRACKER (BASELINE) ".center(60))
+    print("="*60)
+
+    # Inicializa detecções sintéticas
+    print("[*] Gerando detecções sintéticas (sem oclusão)...")
+    synthetic_detector = get_synthetic_detections(0).detections 
     det_df = pd.DataFrame(synthetic_detector)
-    naive_tracker = NaiveTracker(
-        det_df,
-    )
     
-    print(naive_tracker.final_tracks[1])
-    print(naive_tracker.final_tracks[5])
+    # Instancia o rastreador
+    naive_tracker = NaiveTracker(det_df)
+    print(f"[*] Rastreador inicializado. Limiar de IoU: {naive_tracker.iou_threshold}, Max Age: {naive_tracker.max_age}\n")
+    
+    # Simulação de frames (ajuste este loop conforme a lógica da classe Tracker pai)
+    # Supondo que você precisa rodar o update_tracks para os frames existirem no dicionário
+    frames_to_simulate = 5
+    print("-" * 60)
+    for _ in range(frames_to_simulate):
+        naive_tracker.update_tracks()
+    
+    # Exibe os resultados formatados
+    print("\n" + naive_tracker.display_frame_state(1))
+    print("-" * 60)
+    print("\n" + naive_tracker.display_frame_state(5))
+    print("\n" + "="*60)
+    print(" EXECUÇÃO CONCLUÍDA ".center(60))
+    print("="*60)

@@ -1,67 +1,88 @@
 import torch
-from torchvision.io.image import decode_image
+import matplotlib.pyplot as plt
 from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2, FasterRCNN_ResNet50_FPN_V2_Weights
 from torchvision.utils import draw_bounding_boxes
-from torchvision.transforms.functional import to_pil_image
-
+from torchvision.transforms.functional import to_pil_image, to_tensor
 from pathlib import Path
-from ..mot_reader import get_dataloader
+import zipfile
+import io
+from PIL import Image
 
+# Import the ZIP_PATH from your config
+from src.mot_reader import ZIP_PATH
 
 class TorchDetector:
 
     def __init__(self) -> None:
-        # Loading the model with the best available pre-trained weights
         self.weights = FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT
-        self.model = fasterrcnn_resnet50_fpn_v2(weights=self.weights, box_score_thresh=0.9)
+        # Threshold de 0.75 para filtrar as detecções falsas de fundo
+        self.model = fasterrcnn_resnet50_fpn_v2(weights=self.weights, box_score_thresh=0.75)
         self.model.eval()
 
-    def run_inferece(self, image: torch.Tensor):
-        self.img = image
+    def run_inference(self, image_tensor: torch.Tensor):
+        # image_tensor has shape [C, H, W] in [0.0, 1.0] range
+        self.img = image_tensor
 
-        # Initializing the inference transforms and apply them
+        # Re-apply the official torchvision transforms for the detector
         preprocess = self.weights.transforms()
         batch = [preprocess(self.img)]
 
-        # Making the prediction
         with torch.no_grad():
             self.prediction = self.model(batch)[0]
 
-    def plot_predictions(self):
-        # Filtering for the "person" class
-        # The COCO dataset uses label 1 for "person"
+    def plot_predictions(self, save_path: Path = None):
         person_class_id = 1
         person_indices = self.prediction["labels"] == person_class_id
 
         person_boxes = self.prediction["boxes"][person_indices]
         person_scores = self.prediction["scores"][person_indices]
 
-        # 6. Visualize the results
-        # Create a list of labels for the detected persons
-        labels = ["person" for _ in person_boxes]
+        labels = [f"person {score:.2f}" for score in person_scores]
+        
+        # Convert from float [0.0, 1.0] to uint8 [0, 255] for drawing
+        img_uint8 = (self.img * 255).clamp(0, 255).to(torch.uint8)
 
-        # Draw the bounding boxes on the image
         box = draw_bounding_boxes(
-            self.img,
+            img_uint8,
             boxes=person_boxes,
             labels=labels,
             colors="red",
-            width=4,
-            font_size=30
+            width=3, # Thicker line for high-res images
+            font_size=12
         )
 
-        # Convert the tensor to a PIL image and display it
         im = to_pil_image(box.detach())
-        im.show()
+        
+        plt.figure(figsize=(16, 9)) # Widescreen ratio for MOT frames
+        plt.imshow(im)
+        plt.axis("off")
+        
+        if save_path is not None:
+            save_path.parent.mkdir(parents=True, exist_ok=True)
+            plt.savefig(save_path, dpi=300, bbox_inches="tight")
+            print(f"Plot successfully saved to: {save_path}")
+            
+        plt.show()
         
 if __name__ == "__main__":
-    # Testing with first frame of first video
-    dataloader = get_dataloader(True, 0)
+    # Para testar o detector da Parte 1, precisamos do quadro completo (Full Scene),
+    # e não do recorte de 128x64 da Parte 2.
+    seq_name = "MOT17/train/MOT17-02-FRCNN"
+    img_internal_path = f"{seq_name}/img1/000001.jpg"
     
-    image_sequence, person_ids = next(dataloader._get_iterator())
-    first_image = image_sequence[0]
+    print(f"Extraindo quadro original do ZIP: {img_internal_path}")
+    
+    with zipfile.ZipFile(ZIP_PATH, 'r') as z:
+        with z.open(img_internal_path) as f:
+            img_bytes = f.read()
+            raw_image = Image.open(io.BytesIO(img_bytes)).convert('RGB')
+            
+    # Converte PIL Image para Tensor PyTorch
+    full_frame_tensor = to_tensor(raw_image)
     
     torch_detector = TorchDetector()
+    torch_detector.run_inference(full_frame_tensor)
     
-    torch_detector.run_inferece(first_image)
-    torch_detector.plot_predictions()
+    # Define o arquivo de saída
+    out_path = Path("outputs/part1/torch_detector_full_frame.png")
+    torch_detector.plot_predictions(save_path=out_path)

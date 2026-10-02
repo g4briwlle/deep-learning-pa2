@@ -28,32 +28,35 @@ from scipy.optimize import linear_sum_assignment
 
 from ..part_0.synthetic_metrics import calculate_iou
 
-
 # ===========================================================================
 # 3. mAP@0.5 para a detecção (classe única: pessoa)
 # ===========================================================================
 
-def compute_map(dets_by_frame, gt_by_frame, iou_thresh=0.5) -> float:
+def compute_map(predictions: list, ground_truth: list, iou_thresh=0.5) -> float:
     """
     AP@0.5 calculado sobre a sequência inteira (padrão COCO/VOC adaptado a 1 classe).
+    Agora aceita listas planas (flat lists) nas predições e no ground truth.
     """
-    # Empilha todas as detecções: (score, frame, box)
     flat = []
-    for fr, dets in dets_by_frame.items():
-        for d in dets:
-            flat.append((d.get("score", 1.0), fr, _box(d)))
+    for d in predictions:
+        # Passa o dicionário 'd' inteiro em vez de usar _box(d)
+        flat.append((d.get("score", 1.0), d["frame"], d))
+    
     if not flat:
         return 0.0
     flat.sort(key=lambda x: -x[0])
 
-    # GT com flag "matched"
-    gt_index: Dict[int, List[dict]] = {}
-    total_gt = 0
-    for fr, gts in gt_by_frame.items():
-        gt_index[fr] = [{"box": _box(g), "matched": False} for g in gts.values()]
-        total_gt += len(gt_index[fr])
+    gt_index = {}
+    total_gt = len(ground_truth)
     if total_gt == 0:
         return 0.0
+        
+    for g in ground_truth:
+        fr = g["frame"]
+        if fr not in gt_index:
+            gt_index[fr] = []
+        # Passa o dicionário 'g' inteiro em vez de usar _box(g)
+        gt_index[fr].append({"box": g, "matched": False})
 
     tp = np.zeros(len(flat))
     fp = np.zeros(len(flat))
@@ -62,6 +65,7 @@ def compute_map(dets_by_frame, gt_by_frame, iou_thresh=0.5) -> float:
         for j, g in enumerate(gt_index.get(fr, [])):
             if g["matched"]:
                 continue
+            # Agora 'box' e 'g["box"]' são dicionários compatíveis com calculate_iou
             v = calculate_iou(box, g["box"])
             if v > best_iou:
                 best_iou, best_j = v, j
@@ -76,26 +80,24 @@ def compute_map(dets_by_frame, gt_by_frame, iou_thresh=0.5) -> float:
     recall = cum_tp / total_gt
     precision = cum_tp / np.maximum(cum_tp + cum_fp, 1e-12)
 
-    # 11-point interpolation (VOC 2007). Troque por all-point se preferir.
     ap = 0.0
     for t in np.linspace(0, 1, 11):
         mask = recall >= t
         ap += (precision[mask].max() if mask.any() else 0.0) / 11.0
     return float(ap)
 
-
 # ===========================================================================
 # 4. Eixo de dificuldade: duração de oclusão
 # ===========================================================================
 
-def occlusion_durations(gt_by_frame) -> List[int]:
+def occlusion_durations(ground_truth: list) -> List[int]:
     """Lista de gaps (em quadros) entre aparições consecutivas de cada ID do GT."""
     per_id: Dict[int, List[int]] = {}
-    for fr, gts in gt_by_frame.items():
-        for gid in gts:
-            per_id.setdefault(gid, []).append(fr)
+    for d in ground_truth:
+        per_id.setdefault(d["id"], []).append(d["frame"])
+        
     gaps = []
-    for gid, frames in per_id.items():
+    for frames in per_id.values():
         frames.sort()
         for i in range(1, len(frames)):
             g = frames[i] - frames[i - 1] - 1
@@ -104,12 +106,14 @@ def occlusion_durations(gt_by_frame) -> List[int]:
     return gaps
 
 
+
 # ===========================================================================
 # 5. Runner: tabela + gráfico
 # ===========================================================================
 
 @dataclass
 class SeqResult:
+    name: str          # <- ADICIONADO PARA CORRIGIR O ACESSO NO PLOT
     mAP: float
     IDF1: float
     IDSW: int
@@ -294,61 +298,90 @@ class IdentityMetrics2:
         return self.IDSW / self.num_gt_ids if self.num_gt_ids else float("nan")
 
 def main():
+    import os
     import pandas as pd
+    import numpy as np
     
     from .naive_tracker import NaiveTracker
     from ..part_0.synthetic_metrics import CustomTrackerEvaluator
     from ..part_0.synthetic_data import get_synthetic_detections
 
-    gt_and_dets = get_synthetic_detections(0.1)
-    ground_truth = gt_and_dets.ground_truth
-    detections = gt_and_dets.detections
-    detections_df = pd.DataFrame(detections)
-    naive_tracker = NaiveTracker(detections_df)
-    infered_tracks = naive_tracker.infer_tracks()
+    print("============================================================")
+    print("         AVALIACAO DO RASTREADOR - PARTE 1 (BASELINE)       ")
+    print("============================================================")
 
-    evaluator = CustomTrackerEvaluator(0.5)
-    identity_metrics = evaluator.evaluate_from_tracker(ground_truth, infered_tracks)
+    resultados = []
+    # Variamos a dificuldade (duração da oclusão) para preencher o eixo X do gráfico
+    niveis_dificuldade = [0.0, 0.1, 0.2, 0.3, 0.4] 
 
-    mAP = compute_map(infered_tracks, ground_truth, iou_thresh=0.5)
+    for prob_oclusao in niveis_dificuldade:
+        nome_seq = f"Oclusao_{prob_oclusao:.1f}"
+        print(f"\n[*] Processando sequencia simulada: {nome_seq}")
+        
+        gt_and_dets = get_synthetic_detections(prob_oclusao)
+        ground_truth = gt_and_dets.ground_truth
+        detections = gt_and_dets.detections
+        
+        naive_tracker = NaiveTracker(pd.DataFrame(detections))
+        infered_tracks = naive_tracker.infer_tracks()
 
-    gaps = occlusion_durations(ground_truth)
-    if gaps:
-        occ_med = float(np.median(gaps))
-        occ_mean = float(np.mean(gaps))
-        occ_max = int(np.max(gaps))
-    else:
-        occ_med = occ_mean = 0.0
-        occ_max = 0
+        evaluator = CustomTrackerEvaluator(0.5)
+        identity_metrics = evaluator.evaluate_from_tracker(ground_truth, infered_tracks)
+        flat_preds = evaluator._tracks_to_predictions(infered_tracks)
 
-    identity_metrics = IdentityMetrics2(
-        mAP=mAP,
-        IDF1=identity_metrics.IDF1,
-        IDSW=identity_metrics.IDSW,
-        num_gt_ids=len(ground_truth),
-        num_pred_ids=len(infered_tracks)
-    )
+        mAP = compute_map(flat_preds, ground_truth, iou_thresh=0.5)
 
-    result = SeqResult(
-        mAP=identity_metrics.mAP,
-        IDF1=identity_metrics.IDF1,
-        IDSW=identity_metrics.IDSW,
-        num_gt_ids=identity_metrics.num_gt_ids,
-        num_pred_ids=identity_metrics.num_pred_ids,
-        id_ratio=identity_metrics.id_ratio,
-        idsw_per_gt=identity_metrics.idsw_per_gt,
-        occlusion_median=occ_med,
-        occlusion_mean=occ_mean,
-        occlusion_max=occ_max,
-    )
+        gaps = occlusion_durations(ground_truth)
+        if gaps:
+            occ_med = float(np.median(gaps))
+            occ_mean = float(np.mean(gaps))
+            occ_max = int(np.max(gaps))
+        else:
+            occ_med = occ_mean = 0.0
+            occ_max = 0
 
-    print(result)
-    # print()
-    # print_table(results)
-    # save_csv(results, os.path.join(args.out_dir, "tabela_parte1.csv"))
-    # plot_descolamento(results, os.path.join(args.out_dir, "descolamento_parte1.png"))
-    # print(f"\nArtefatos salvos em {args.out_dir}/")
+        num_gt_ids = len(set(d['id'] for d in ground_truth))
+        num_pred_ids = len(set(d['id'] for d in flat_preds))
+        id_ratio = num_pred_ids / num_gt_ids if num_gt_ids > 0 else float("nan")
+        idsw_per_gt = identity_metrics.IDSW / num_gt_ids if num_gt_ids > 0 else float("nan")
 
+        result = SeqResult(
+            name=nome_seq, # Passamos o identificador da sequência
+            mAP=mAP,
+            IDF1=identity_metrics.IDF1,
+            IDSW=identity_metrics.IDSW,
+            num_gt_ids=num_gt_ids,
+            num_pred_ids=num_pred_ids,
+            id_ratio=id_ratio,
+            idsw_per_gt=idsw_per_gt,
+            occlusion_median=occ_med,
+            occlusion_mean=occ_mean,
+            occlusion_max=occ_max,
+        )
+        resultados.append(result)
+
+    print("\n------------------------------------------------------------")
+    print("                     RESULTADOS GERAIS                      ")
+    print("------------------------------------------------------------")
+    
+    # Imprime no terminal de forma clara para o arquivo txt do 'tee'
+    print(f"{'Sequencia':<15} | {'mAP':<6} | {'IDF1':<6} | {'IDSW':<5} | {'Pred/GT Ratio':<15} | {'Med Oclusao'}")
+    print("-" * 75)
+    for r in resultados:
+        print(f"{r.name:<15} | {r.mAP:<6.4f} | {r.IDF1:<6.4f} | {r.IDSW:<5} | {r.id_ratio:<15.2f} | {r.occlusion_median:<5.1f}")
+         
+    # 3. Chamar a função do gráfico que já existe no seu arquivo original
+    # Garantimos que a pasta de destino existe
+    os.makedirs("outputs/part1", exist_ok=True)
+    caminho_plot = "outputs/part1/descolamento_parte1.png"
+    
+    print("\n[*] Gerando e salvando grafico obrigatorio...")
+    plot_descolamento(resultados, caminho_plot)
+    print(f"[*] Grafico salvo com sucesso em: {caminho_plot}")
+    
+    print("\n============================================================")
+    print("                     EXECUCAO CONCLUIDA                     ")
+    print("============================================================")
 
 if __name__ == "__main__":
     main()
