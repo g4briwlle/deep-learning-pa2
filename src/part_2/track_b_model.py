@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from torchvision.models import resnet18, ResNet18_Weights
+torch.set_num_threads(os.cpu_count())
 
 # Imports consistentes com a estrutura de pacotes do repositório
 from src.config import DATA_DIR, CACHE_DIR
@@ -68,7 +69,7 @@ def train_model():
 
     trainable_params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.Adam(trainable_params, lr=1e-3) # Pode usar lr um pouco maior (1e-3)
-    
+
     # Enunciado exige Perda contrastiva ou triplet sobre as identidades do ground truth
     triplet_loss_fn = nn.TripletMarginLoss(margin=1.0, p=2)
     
