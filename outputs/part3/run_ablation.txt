@@ -135,3 +135,7 @@
   [AppearanceRNN_Simple | T=8 | seed=1] epoch 2/5 loss=0.7578
   [AppearanceRNN_Simple | T=8 | seed=1] epoch 3/5 loss=0.4632
   [AppearanceRNN_Simple | T=8 | seed=1] epoch 4/5 loss=0.3621
+  [AppearanceRNN_Simple | T=8 | seed=1] epoch 5/5 loss=0.3213
+  [ckpt] ckpt_simple_T8_seed1.pth
+=== simple | T=8 | seed=2 ===
+  [dataset] seq_length=8, 2301 sequences
