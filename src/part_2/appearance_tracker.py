@@ -129,11 +129,16 @@ class AppearanceTracker(Tracker):
         # 3. Portão Geométrico Estrito de IoU
         ious = iou_matrix(tracks_df, frame_det_df)
         
-        # Só permite associação puramente por aparência (cosseno) se a track estiver OCLUÍDA (misses > 0).
-        # Se a track estava visível no quadro anterior (misses == 0), o IoU TEM QUE SER > 0.1, 
-        # senão penalizamos infinitamente para impedir o "salto" de um lado para o outro da tela.
-        gate_mask = (ious < 0.1) & np.array([[self.tracks[tid]["misses"] == 0 for tid in track_ids]]).T
-        cost_matrix[gate_mask] = 1e5
+        # Calcula a distância em pixels entre os centros
+        tracks_centers = tracks_df[['bb_left', 'bb_top']].values + tracks_df[['bb_width', 'bb_height']].values / 2
+        dets_centers = frame_det_df[['bb_left', 'bb_top']].values + frame_det_df[['bb_width', 'bb_height']].values / 2
+        dist_matrix = np.linalg.norm(tracks_centers[:, None, :] - dets_centers[None, :, :], axis=2)
+
+        # Distância máxima permitida (ex: 50 pixels por frame ausente)
+        max_dist = np.array([[50 * (self.tracks[tid]["misses"] + 1) for tid in track_ids]]).T
+        
+        # Bloqueia a associação se estiver muito longe (mesmo com aparência parecida)
+        cost_matrix[dist_matrix > max_dist] = 1e5
 
         # 4. Hungarian Match
         row_ind, col_ind = linear_sum_assignment(cost_matrix)

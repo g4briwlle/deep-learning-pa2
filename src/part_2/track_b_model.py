@@ -38,8 +38,10 @@ class AppearanceRNN(nn.Module):
         self.encoder = resnet18(weights=ResNet18_Weights.DEFAULT)
         
         # 🚀 CONGELA O BACKBONE PARA VOAR NA CPU:
-        for param in self.encoder.parameters():
-            param.requires_grad = False
+        # Congela as primeiras camadas, mas deixa a layer4 (última) treinar
+        for name, param in self.encoder.named_parameters():
+            if "layer4" not in name and "fc" not in name:
+                param.requires_grad = False
             
         # Apenas a camada final de projeção (fc) será treinada
         self.encoder.fc = nn.Linear(self.encoder.fc.in_features, emb_dim)
@@ -48,14 +50,14 @@ class AppearanceRNN(nn.Module):
         self.rnn = nn.GRUCell(input_size=emb_dim, hidden_size=emb_dim)
 
     def forward_cnn(self, x):
-        """Passa o recorte (crop) de 128x64 pela CNN para extrair a aparência daquele instante."""
-        return self.encoder(x)
+        emb = self.encoder(x)
+        return F.normalize(emb, p=2, dim=1) # <- Adicione isso
 
     def forward_rnn(self, curr_emb, prev_hidden):
-        """Atualiza a memória de aparência com a nova observação."""
         if prev_hidden is None:
             prev_hidden = torch.zeros_like(curr_emb)
-        return self.rnn(curr_emb, prev_hidden)
+        h = self.rnn(curr_emb, prev_hidden)
+        return F.normalize(h, p=2, dim=1) # <- Adicione isso
 
 # ==============================================================================
 # 2. TREINAMENTO REAL NOS DADOS MOT17   
@@ -78,7 +80,7 @@ def train_model():
     train_loader = get_dataloader(train=True, video_index=0, batch_size=32, shuffle=True)
     
     loss_history = []
-    epochs = 10
+    epochs = 15
     
     for epoch in range(epochs):
         epoch_loss = 0.0

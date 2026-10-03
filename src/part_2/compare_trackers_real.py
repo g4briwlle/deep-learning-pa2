@@ -116,7 +116,7 @@ def run_real_comparison():
     ax1.set_title("Comparação Direta: Baseline vs Trilha B (Dados Reais MOT17-09)")
     ax1.legend(loc='upper left')
 
-    plot_path = OUT_DIR / "comparacao_PA1_vs_PA2.png"
+    plot_path = OUT_DIR / "3_comparacao_PA1_vs_PA2.png"
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     plt.close()
 
