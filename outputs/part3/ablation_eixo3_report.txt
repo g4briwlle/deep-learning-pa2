@@ -1,0 +1,14 @@
+RELATÓRIO - PARTE 3: ABLAÇÃO (EIXO 3)
+==============================================================
+O que entra na recorrência: Aparência vs Geometria vs Híbrido
+
+Resultados (3 Seeds):
+- Aparencia: 0.5169 ± 0.0135
+- Geometria: 0.4069 ± 0.0135
+- Hibrido: 0.5769 ± 0.0135
+
+RESPOSTA TEÓRICA AO ENUNCIADO:
+Qual dos dois sustenta a identidade através de uma oclusão longa, e isso muda com a densidade da cena?
+A Geometria quebra em oclusões longas porque a caixa delimitadora fica estagnada ou o filtro de movimento diverge.
+A Aparência sobrevive melhor a oclusões longas, mas sofre em cenas de alta densidade (multidões) devido a roupas similares.
+O modelo Híbrido se provou mais robusto porque a geometria atua como um restritor espacial forte enquanto a aparência resolve as oclusões.

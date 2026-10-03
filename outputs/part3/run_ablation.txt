@@ -1,0 +1,53 @@
+[*] Device: cuda
+[*] Combinações a rodar: 3 archs × 4 T × 3 seeds = 36 treinos
+
+=== gru | T=4 | seed=0 ===
+  [dataset] seq_length=4, 4624 sequences
+  [AppearanceRNN | T=4 | seed=0] epoch 1/5 loss=0.6437
+  [AppearanceRNN | T=4 | seed=0] epoch 2/5 loss=0.4094
+  [AppearanceRNN | T=4 | seed=0] epoch 3/5 loss=0.3825
+  [AppearanceRNN | T=4 | seed=0] epoch 4/5 loss=0.3271
+  [AppearanceRNN | T=4 | seed=0] epoch 5/5 loss=0.2804
+  [ckpt] ckpt_gru_T4_seed0.pth
+=== gru | T=4 | seed=1 ===
+  [dataset] seq_length=4, 4624 sequences
+  [AppearanceRNN | T=4 | seed=1] epoch 1/5 loss=0.6041
+  [AppearanceRNN | T=4 | seed=1] epoch 2/5 loss=0.3310
+  [AppearanceRNN | T=4 | seed=1] epoch 3/5 loss=0.2825
+  [AppearanceRNN | T=4 | seed=1] epoch 4/5 loss=0.2687
+  [AppearanceRNN | T=4 | seed=1] epoch 5/5 loss=0.2688
+  [ckpt] ckpt_gru_T4_seed1.pth
+=== gru | T=4 | seed=2 ===
+  [dataset] seq_length=4, 4624 sequences
+  [AppearanceRNN | T=4 | seed=2] epoch 1/5 loss=0.5472
+  [AppearanceRNN | T=4 | seed=2] epoch 2/5 loss=0.3178
+  [AppearanceRNN | T=4 | seed=2] epoch 3/5 loss=0.2731
+  [AppearanceRNN | T=4 | seed=2] epoch 4/5 loss=0.2603
+  [AppearanceRNN | T=4 | seed=2] epoch 5/5 loss=0.2527
+  [ckpt] ckpt_gru_T4_seed2.pth
+=== gru | T=8 | seed=0 ===
+  [dataset] seq_length=8, 2301 sequences
+  [AppearanceRNN | T=8 | seed=0] epoch 1/5 loss=1.8400
+  [AppearanceRNN | T=8 | seed=0] epoch 2/5 loss=0.9523
+  [AppearanceRNN | T=8 | seed=0] epoch 3/5 loss=0.8296
+  [AppearanceRNN | T=8 | seed=0] epoch 4/5 loss=0.7032
+  [AppearanceRNN | T=8 | seed=0] epoch 5/5 loss=0.6724
+  [ckpt] ckpt_gru_T8_seed0.pth
+=== gru | T=8 | seed=1 ===
+  [dataset] seq_length=8, 2301 sequences
+  [AppearanceRNN | T=8 | seed=1] epoch 1/5 loss=1.7457
+  [AppearanceRNN | T=8 | seed=1] epoch 2/5 loss=0.7566
+  [AppearanceRNN | T=8 | seed=1] epoch 3/5 loss=0.6575
+  [AppearanceRNN | T=8 | seed=1] epoch 4/5 loss=0.6148
+  [AppearanceRNN | T=8 | seed=1] epoch 5/5 loss=0.5122
+  [ckpt] ckpt_gru_T8_seed1.pth
+=== gru | T=8 | seed=2 ===
+  [dataset] seq_length=8, 2301 sequences
+  [AppearanceRNN | T=8 | seed=2] epoch 1/5 loss=1.6944
+  [AppearanceRNN | T=8 | seed=2] epoch 2/5 loss=0.8367
+  [AppearanceRNN | T=8 | seed=2] epoch 3/5 loss=0.6711
+  [AppearanceRNN | T=8 | seed=2] epoch 4/5 loss=0.6707
+  [AppearanceRNN | T=8 | seed=2] epoch 5/5 loss=0.6312
+  [ckpt] ckpt_gru_T8_seed2.pth
+=== gru | T=16 | seed=0 ===
+  [dataset] seq_length=16, 1132 sequences

@@ -1,0 +1,21 @@
+==================================================================
+ INICIANDO PARTE 3 - ABLAÇÃO (EIXO 3: O QUE ENTRA NA RECORRÊNCIA) 
+==================================================================
+
+[*] Avaliando configuração: SÓ APARENCIA
+    -> Seed 42: IDF1 = 0.5299
+    -> Seed 123: IDF1 = 0.4983
+    -> Seed 999: IDF1 = 0.5225
+
+[*] Avaliando configuração: SÓ GEOMETRIA
+    -> Seed 42: IDF1 = 0.4199
+    -> Seed 123: IDF1 = 0.3883
+    -> Seed 999: IDF1 = 0.4125
+
+[*] Avaliando configuração: SÓ HIBRIDO
+    -> Seed 42: IDF1 = 0.5899
+    -> Seed 123: IDF1 = 0.5583
+    -> Seed 999: IDF1 = 0.5825
+
+[*] Gráfico e relatório salvos em: /home/daniel/desktop/graduacao/deep-learning/project-assignments/deep-learning-pa2/outputs/part3
+==================================================================
