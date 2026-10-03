@@ -1,0 +1,154 @@
+================================================================================
+PARTE 3 — EIXO 1: ABLAÇÃO DA CÉLULA RECORRENTE
+Análise e diagnóstico (base teórica + leitura dos artefatos gerados)
+================================================================================
+
+1. PERGUNTA DO ENUNCIADO
+--------------------------------------------------------------------------------
+"RNN simples vs. LSTM vs. GRU, no mesmo orçamento aproximado de parâmetros,
+variando também o comprimento da janela de BPTT truncado (T ∈ {4, 8, 16, 32}).
+A pergunta específica: onde a RNN simples quebra, e isso bate com a história
+de gradiente que some contada na aula?"
+
+
+2. O QUE FOI ABLACIONADO
+--------------------------------------------------------------------------------
+Duas dimensões independentes, cruzadas:
+
+(a) Célula recorrente
+    - simple : nn.RNNCell   → sem portas
+    - gru    : nn.GRUCell   → baseline da Parte 2
+    - lstm   : nn.LSTMCell  → com portas + cell state
+
+(b) Comprimento do BPTT truncado
+    - T ∈ {4, 8, 16, 32}
+
+Controle de justiça:
+    - Mesmo encoder (ResNet18 congelada + fc treinável, emb_dim=128).
+    - Mesma perda (TripletMarginLoss, margin=1.0, p=2).
+    - Mesmo orçamento (5 épocas, Adam lr=1e-3, batch=32).
+    - 3 seeds {0, 1, 2} → reporte em média ± desvio.
+
+Total: 3 arquiteturas × 4 valores de T × 3 seeds = 36 treinos curtos.
+
+
+3. COMO FOI FEITO (CÓDIGO)
+--------------------------------------------------------------------------------
+- src/part_3/variants.py
+    AppearanceRNN_Simple  → herda encoder da Parte 2, troca só a célula.
+    AppearanceRNN_LSTM    → idem, estado é (h, c).
+    get_hidden(state)     → uniformiza acesso ao estado oculto (LSTM-safe).
+
+- src/part_3/run_ablation.py
+    Loop: for arch × T × seed
+        instancia MOTSequenceDataset(seq_length=T)
+        treina 5 épocas com a triplet loss
+        salva ckpt_{arch}_T{T}_seed{seed}.pth
+    Ao final:
+        ablation_results.csv    (arch, T, seed, final_loss)
+        ablation_cell_bptt.png  (loss média ± std vs T, uma curva por arch)
+
+- Nada da Parte 2 foi alterado. Nenhum retreino da Parte 2 é necessário.
+
+Princípio: o T do dataset e o T da célula são o mesmo — cada item do dataset
+já vem com T frames consecutivos de uma pessoa, garantindo que a recorrência
+é treinada exatamente na janela que se quer medir.
+
+
+4. O QUE A TEORIA PREDIZ
+--------------------------------------------------------------------------------
+Rastro do gradiente em uma RNN vanilla:
+
+    h_t = tanh(W_h h_{t-1} + W_x x_t + b)
+
+    ∂h_t / ∂h_{t-k} = ∏_{i=0}^{k-1} diag(tanh'(z_i)) · W_h
+
+Cada fator tem norma tipicamente < 1 (tanh satura; após treino, ||W_h|| < 1).
+Portanto o produto decai EXPONENCIALMENTE em k.
+
+LSTM/GRU escapam porque o gradiente tem um caminho direto pelo cell state
+    ∂c_t / ∂c_{t-1} ≈ f_t   (forget gate)
+e f_t pode ficar próximo de 1 sem ser multiplicado por matriz nem por derivada
+saturante. Esse é o "constant error carousel" (Hochreiter 1997; Pascanu 2013).
+
+Predição empírica derivada:
+    - Em T pequeno (4, 8): as três células empatam.
+    - Em T grande (16, 32): 'simple' se descola para cima (pior loss).
+    - Ponto T* onde o descolamento começa ≈ k onde ||∂L/∂h_{T-k}|| morre.
+
+
+5. DIAGNÓSTICO ESPERADO (LEITURA DOS ARTEFATOS)
+--------------------------------------------------------------------------------
+Painel único: ablation_cell_bptt.png
+
+    Cenário A — teoria bate:
+        simple ≈ gru ≈ lstm em T=4 e T=8.
+        Em T=16 começa a separar; em T=32 'simple' claramente pior.
+        Leitura: só a RNN sem portas perde com contexto longo.
+
+    Cenário B — teoria não bate:
+        Curvas parecidas em todos os T, ou 'simple' ganha em algum T.
+        Hipóteses alternativas:
+            (i) T=32 ainda é curto demais para o decaimento importar
+                nestes dados.
+            (ii) A 'simple' compensou o gradiente com uma W_h mais
+                 próxima de ortogonal durante o treino.
+        Nos dois casos, 'simple' ainda pode ter uma curva de gradiente
+        que some — o que muda é a consequência prática dela.
+
+
+6. PONTE PARA "A HISTÓRIA DO GRADIENTE"
+--------------------------------------------------------------------------------
+O ablation_cell_bptt.png sozinho NÃO PROVA que a causa da queda é o
+gradiente. Ele mostra QUE 'simple' quebra; não mostra POR QUÊ.
+
+A ponte é o script diagnose_simple_rnn.py, que mede em cima dos checkpoints
+de T=32:
+
+    || ∂L_T / ∂h_{T-k} ||   para k = 0, 1, 2, ..., 31
+
+Se os três números a seguir coincidirem, o diagnóstico fecha:
+
+    T*      (onde 'simple' se descola em ablation_cell_bptt.png)
+    ≈ k*    (onde o gradiente dela cruza ~1e-3 no painel de horizonte)
+    ≈ T_eff (onde o contexto efetivo satura no teste de janela)
+
+A concordância dos três é a evidência de que o fator limitante é o
+decaimento do gradiente, e não capacidade, otimização ou overfitting.
+
+Se NÃO coincidirem, isso também é resultado: indica que o gargalo é
+outro, e a ablação continua válida como caracterização do
+comportamento — só que a explicação muda.
+
+
+7. LIMITAÇÕES E CAVEATS (reportar na apresentação)
+--------------------------------------------------------------------------------
+- "Loss final" é proxy. Um valor menor não garante melhor rastreamento.
+  O número-alvo do enunciado é IDF1; plugar o tracker da Parte 2/3 fecha
+  o ciclo.
+- 5 épocas pode não ser tempo suficiente para LSTM/GRU convergirem em
+  T grande. Se 'lstm' perder para 'gru' em T=32, é sinal de sub-treino,
+  não de inferioridade arquitetural.
+- O T do dataset é fixo por item, então 'T' no BPTT É o comprimento da
+  janela de treino. Não há como dissociar as duas coisas neste setup.
+- Rodar horizonte analítico em seed=0 é suficiente: a forma da curva de
+  gradiente é propriedade da arquitetura treinada, não ruído entre seeds.
+  A variabilidade entre seeds já está capturada em ablation_results.csv.
+
+
+8. RESUMO EM UMA FRASE
+--------------------------------------------------------------------------------
+Treinamos 36 modelos (3 células × 4 BPTT × 3 seeds) com o mesmo encoder,
+mesma perda e mesmo orçamento; a hipótese é que a RNN simples degrada com
+T crescente enquanto GRU e LSTM permanecem estáveis, e que o ponto de
+degradação coincide com o k onde ||∂L_T/∂h_{T-k}|| morre — a curva de
+gradiente que some dos slides de treinamento de RNN.
+
+================================================================================
+Artefatos gerados por esta análise:
+    outputs/part3/ablation_results.csv
+    outputs/part3/ablation_cell_bptt.png
+    outputs/part3/gradient_horizon.csv          (via diagnose_simple_rnn.py)
+    outputs/part3/effective_context.csv         (via diagnose_simple_rnn.py)
+    outputs/part3/diagnosis_simple_rnn.png      (via diagnose_simple_rnn.py)
+================================================================================
