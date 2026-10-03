@@ -1,0 +1,19 @@
+RELATÓRIO - PARTE 4: HORIZONTE ANALÍTICO (GRADIENTE QUE SOME)
+==============================================================
+Janela de tempo avaliada: 8 quadros.
+
+k (Passos p/ trás) | Norma Bruta | Norma Retida (%)
+-------------------------------------------------------
+0                  |  0.062500   |        100.00%
+1                  |  0.012719   |         20.35%
+2                  |  0.003496   |          5.59%
+3                  |  0.001195   |          1.91%
+4                  |  0.000466   |          0.74%
+5                  |  0.000198   |          0.32%
+6                  |  0.000088   |          0.14%
+7                  |  0.000039   |          0.06%
+
+DIAGNÓSTICO:
+Observando a queda exponencial (ou resistência) da norma na escala logarítmica,
+podemos definir o 'horizonte efetivo' como o valor k onde a norma cai abaixo de 5% do sinal original.
+Buracos de detecção (oclusões) maiores que esse horizonte k não receberão sinal de supervisão efetivo.
