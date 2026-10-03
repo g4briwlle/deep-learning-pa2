@@ -1,4 +1,4 @@
-## Treinando o modelo
+# Treinando o modelo
 
 O seguinte comando faz o fluxo padrão de treinamento do modelo final implementado na parte 2, colocando os outputs no caminho `outputs/part2/train_track_b.txt`. Rode qualquer comando no diretório raíz do repo.
 
@@ -31,4 +31,18 @@ python -u -m src.part_2.train_track_b --video-index 2 --lr 5e-4
 Salvar em outro arquivo sem sobrescrever o checkpoint da apresentação
 ```bash
 python -u -m src.part_2.train_track_b --epochs 30 --ckpt-name appearance_rnn_30ep.pth
+```
+
+
+# Rodando inferencia.py:
+Comando para rodar o arquivo em powershell, com uma sequência de teste, e gerar o video classificado:
+
+```powershell
+python inferencia.py --seq_name "MOT17-02-FRCNN" --output "resultado_exemplo.mp4"
+```
+
+OBS: Se quiser rodar mais rápidamente, adicionar após a linha 80 do arquivo o seguinte comando para diminuir o número de frames:
+```python
+# Filtra apenas os primeiros 100 quadros para um teste rápido
+dets_df = dets_df[dets_df['frame'] <= 100].copy()
 ```
