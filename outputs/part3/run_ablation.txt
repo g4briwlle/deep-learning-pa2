@@ -131,3 +131,6 @@
   [ckpt] ckpt_simple_T8_seed0.pth
 === simple | T=8 | seed=1 ===
   [dataset] seq_length=8, 2301 sequences
+  [AppearanceRNN_Simple | T=8 | seed=1] epoch 1/5 loss=3.1634
+  [AppearanceRNN_Simple | T=8 | seed=1] epoch 2/5 loss=0.7578
+  [AppearanceRNN_Simple | T=8 | seed=1] epoch 3/5 loss=0.4632
