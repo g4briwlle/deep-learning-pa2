@@ -87,7 +87,13 @@ def run_stress_test():
         dets_df = pd.DataFrame(simulated_dets)
         
         # 2. Avalia mAP do detector estragado
-        flat_dets = evaluator._tracks_to_predictions({f: {i: d} for i, d in enumerate(simulated_dets)}) 
+        # Agrupa as detecções simuladas por frame: {frame: {id: detection}}
+        dets_by_frame = {}
+        for d in simulated_dets:
+            frame = int(d['frame'])
+            dets_by_frame.setdefault(frame, {})[d['id']] = d
+
+        flat_dets = evaluator._tracks_to_predictions(dets_by_frame)
         mAP = compute_map(flat_dets, ground_truth, iou_thresh=0.5)
         
         # 3. Roda o Rastreador da Trilha B

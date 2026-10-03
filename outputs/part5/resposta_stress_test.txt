@@ -1,0 +1,21 @@
+RESPOSTA TEÓRICA - PARTE 5: TESTE DE ESTRESSE (Qualidade do Detector)
+========================================================================
+
+O modelo temporal absorve ou amplifica a falha do detector?
+------------------------------------------------------------------------
+Ao contrário da baseline ingênua da Parte 1, o modelo temporal da Trilha B
+(Memória de Aparência Recorrente) tem a capacidade de ABSORVER falhas do detector
+até um certo limite. O gráfico demonstra que a curva do IDF1 cai de forma mais suave 
+que a curva do mAP nas degradações iniciais.
+
+Por que isso acontece?
+1. Tolerância a Drops: Quando o detector omite a caixa de uma pessoa por alguns quadros,
+   a GRU retém a última assinatura de aparência no estado oculto. Quando a pessoa 
+   reaparece, a similaridade de cosseno a reconhece, poupando um ID Switch e salvando o IDF1.
+2. Tolerância a Ruído: Pequenas trepidações nas caixas afetam severamente o mAP 
+   (que exige IoU > 0.5), mas o recorte das roupas (crop) da CNN ainda é representativo, 
+   garantindo o matching correto pela aparência independentemente de uma geometria exata.
+3. Limite: Em intensidades extremas, a abundância de falsos positivos enche a memória
+   do tracker de assinaturas 'fantasmas', eventualmente derrubando o IDF1 de forma abruta.
+Conclusão: A temporalidade estruturada absorve bem o ruído e oclusões curtas,
+tornando o pipeline resiliente a um detector imperfeito.
