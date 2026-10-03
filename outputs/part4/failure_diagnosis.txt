@@ -1,0 +1,17 @@
+DIAGNÓSTICO DA GALERIA DE FALHAS - PARTE 4
+==========================================
+
+Falha 1 (Frames 100-160): ID Switch por Oclusão Longa.
+Diagnóstico: O objeto GT:X fica atrás de um obstáculo por 20 quadros. Nossa janela BPTT de treino 
+foi de apenas T=8. Conforme o gráfico de horizonte de memória gerado, a GRU esquece a aparência 
+em k=12. O modelo não recebeu sinal de supervisão para atravessar esse buraco.
+
+Falha 2 (Frames 250-310): Confusão de Aparência em Multidão.
+Diagnóstico: Duas pessoas com roupas parecidas cruzam caminhos. Como usamos um limiar de cosseno fixo 
+e a rede não capturou texturas de alta frequência (rosto), a similaridade entre os dois foi maior 
+que o limiar, roubando a identidade do vizinho.
+
+Ação de Correção Sugerida (e testada):
+Aumentamos a variável 'kill_track_frames' (memória empírica do rastreador) de 15 para 30, e 
+descongelamos a layer4 da ResNet. Isso provou ser parcialmente eficiente: o ID Switch de oclusão 
+foi mitigado, mas a confusão de multidão densa ainda exige um portão puramente espacial mais estrito.

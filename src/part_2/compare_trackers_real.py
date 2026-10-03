@@ -50,12 +50,13 @@ def run_real_comparison():
     print(" COMPARAÇÃO LADO A LADO: BASELINE vs TRILHA B (DADOS REAIS MOT17) ")
     print("==================================================================")
 
-    seq_name = "MOT17/train/MOT17-09-FRCNN"
+    seq_name = "MOT17/train/MOT17-11-FRCNN"
+    
     print(f"[*] Carregando dados reais da sequência {seq_name}...")
     ground_truth, dets_df = load_mot17_data(seq_name)
     
     # Para acelerar o teste, vamos usar apenas os primeiros 500 frames
-    max_frames = 500
+    max_frames = 200
     ground_truth = [gt for gt in ground_truth if gt['frame'] <= max_frames]
     dets_df = dets_df[dets_df['frame'] <= max_frames].copy()
     

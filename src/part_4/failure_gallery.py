@@ -109,8 +109,15 @@ def run_failure_gallery():
     # Converte dicionário aninhado para DataFrame
     rows = []
     for f_num, tracks in infered_tracks_dict.items():
-        for tid, box in tracks.items():
-            rows.append({'frame': f_num, 'track_id': tid, 'bb_left': box[0], 'bb_top': box[1], 'bb_width': box[2], 'bb_height': box[3]})
+        for tid, state_dict in tracks.items():
+            rows.append({
+                'frame': f_num, 
+                'track_id': tid, 
+                'bb_left': state_dict['bb_left'], 
+                'bb_top': state_dict['bb_top'], 
+                'bb_width': state_dict['bb_width'], 
+                'bb_height': state_dict['bb_height']
+            })
     pred_df = pd.DataFrame(rows)
 
     # 3. Encontra Oclusões e Falhas de forma hardcoded (Diagnóstico Analítico)
