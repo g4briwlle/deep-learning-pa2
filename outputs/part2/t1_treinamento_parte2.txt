@@ -1,181 +1,125 @@
 Iniciando Treinamento da Trilha B com dados MOT17 reais...
 Total sequences extracted: 2301. Corresponds to video with approximately 1227.2 seconds.
-Epoch 1, Batch 10, Loss: 8.4731
-Epoch 1, Batch 20, Loss: 4.8991
-Epoch 1, Batch 30, Loss: 2.4018
-Epoch 1, Batch 40, Loss: 3.0226
-Epoch 1, Batch 50, Loss: 1.4822
-Epoch 1, Batch 60, Loss: 1.7715
-Epoch 1, Batch 70, Loss: 2.1740
---- Fim da Epoch 1 | Loss Média: 4.0082 ---
-Epoch 2, Batch 10, Loss: 1.4622
-Epoch 2, Batch 20, Loss: 1.0410
-Epoch 2, Batch 30, Loss: 0.9217
-Epoch 2, Batch 40, Loss: 1.0285
-Epoch 2, Batch 50, Loss: 0.9378
-Epoch 2, Batch 60, Loss: 0.9011
-Epoch 2, Batch 70, Loss: 0.8245
---- Fim da Epoch 2 | Loss Média: 1.0821 ---
-Epoch 3, Batch 10, Loss: 1.5562
-Epoch 3, Batch 20, Loss: 0.5077
-Epoch 3, Batch 30, Loss: 0.5191
-Epoch 3, Batch 40, Loss: 0.6316
-Epoch 3, Batch 50, Loss: 0.5648
-Epoch 3, Batch 60, Loss: 0.4864
-Epoch 3, Batch 70, Loss: 0.7561
---- Fim da Epoch 3 | Loss Média: 0.6865 ---
-Epoch 4, Batch 10, Loss: 1.2325
-Epoch 4, Batch 20, Loss: 0.6851
-Epoch 4, Batch 30, Loss: 0.5691
-Epoch 4, Batch 40, Loss: 0.1717
-Epoch 4, Batch 50, Loss: 0.3787
-Epoch 4, Batch 60, Loss: 0.1065
-Epoch 4, Batch 70, Loss: 0.4884
---- Fim da Epoch 4 | Loss Média: 0.4966 ---
-Epoch 5, Batch 10, Loss: 0.2025
-Epoch 5, Batch 20, Loss: 0.3726
-Epoch 5, Batch 30, Loss: 0.2678
-Epoch 5, Batch 40, Loss: 0.4515
-Epoch 5, Batch 50, Loss: 0.3537
-Epoch 5, Batch 60, Loss: 0.1896
-Epoch 5, Batch 70, Loss: 0.1259
---- Fim da Epoch 5 | Loss Média: 0.3657 ---
-Epoch 6, Batch 10, Loss: 0.4545
-Epoch 6, Batch 20, Loss: 0.3082
-Epoch 6, Batch 30, Loss: 0.2317
-Epoch 6, Batch 40, Loss: 0.1413
-Epoch 6, Batch 50, Loss: 0.3396
-Epoch 6, Batch 60, Loss: 0.1219
-Epoch 6, Batch 70, Loss: 0.8099
---- Fim da Epoch 6 | Loss Média: 0.3292 ---
-Epoch 7, Batch 10, Loss: 0.2195
-Epoch 7, Batch 20, Loss: 0.2761
-Epoch 7, Batch 30, Loss: 0.1700
-Epoch 7, Batch 40, Loss: 0.1261
-Epoch 7, Batch 50, Loss: 0.1123
-Epoch 7, Batch 60, Loss: 0.1287
-Epoch 7, Batch 70, Loss: 0.3028
---- Fim da Epoch 7 | Loss Média: 0.2729 ---
-Epoch 8, Batch 10, Loss: 0.1038
-Epoch 8, Batch 20, Loss: 0.4153
-Epoch 8, Batch 30, Loss: 0.2606
-Epoch 8, Batch 40, Loss: 0.4565
-Epoch 8, Batch 50, Loss: 0.0769
-Epoch 8, Batch 60, Loss: 0.1718
-Epoch 8, Batch 70, Loss: 0.0183
---- Fim da Epoch 8 | Loss Média: 0.2471 ---
-Epoch 9, Batch 10, Loss: 0.3078
-Epoch 9, Batch 20, Loss: 0.0522
-Epoch 9, Batch 30, Loss: 0.1698
-Epoch 9, Batch 40, Loss: 0.2384
-Epoch 9, Batch 50, Loss: 0.0376
-Epoch 9, Batch 60, Loss: 0.6480
-Epoch 9, Batch 70, Loss: 0.2172
---- Fim da Epoch 9 | Loss Média: 0.2074 ---
-Epoch 10, Batch 10, Loss: 0.1993
-Epoch 10, Batch 20, Loss: 0.3017
-Epoch 10, Batch 30, Loss: 0.0797
-Epoch 10, Batch 40, Loss: 0.1420
-Epoch 10, Batch 50, Loss: 0.2545
-Epoch 10, Batch 60, Loss: 0.2206
-Epoch 10, Batch 70, Loss: 0.1873
---- Fim da Epoch 10 | Loss Média: 0.2030 ---
-Epoch 11, Batch 10, Loss: 0.0744
-Epoch 11, Batch 20, Loss: 0.3562
-Epoch 11, Batch 30, Loss: 0.2446
-Epoch 11, Batch 40, Loss: 0.2727
-Epoch 11, Batch 50, Loss: 0.0477
-Epoch 11, Batch 60, Loss: 0.1908
-Epoch 11, Batch 70, Loss: 0.2329
---- Fim da Epoch 11 | Loss Média: 0.1966 ---
-Epoch 12, Batch 10, Loss: 0.2317
-Epoch 12, Batch 20, Loss: 0.0996
-Epoch 12, Batch 30, Loss: 0.1874
-Epoch 12, Batch 40, Loss: 0.3053
-Epoch 12, Batch 50, Loss: 0.1076
-Epoch 12, Batch 60, Loss: 0.0920
-Epoch 12, Batch 70, Loss: 0.0072
---- Fim da Epoch 12 | Loss Média: 0.2057 ---
-Epoch 13, Batch 10, Loss: 0.2697
-Epoch 13, Batch 20, Loss: 0.0739
-Epoch 13, Batch 30, Loss: 0.3376
-Epoch 13, Batch 40, Loss: 0.0544
-Epoch 13, Batch 50, Loss: 0.1732
-Epoch 13, Batch 60, Loss: 0.1647
-Epoch 13, Batch 70, Loss: 0.1270
---- Fim da Epoch 13 | Loss Média: 0.1746 ---
-Epoch 14, Batch 10, Loss: 0.1482
-Epoch 14, Batch 20, Loss: 0.1606
-Epoch 14, Batch 30, Loss: 0.2781
-Epoch 14, Batch 40, Loss: 0.4701
-Epoch 14, Batch 50, Loss: 0.1224
-Epoch 14, Batch 60, Loss: 0.2460
-Epoch 14, Batch 70, Loss: 0.1678
---- Fim da Epoch 14 | Loss Média: 0.1608 ---
-Epoch 15, Batch 10, Loss: 0.1253
-Epoch 15, Batch 20, Loss: 0.1894
-Epoch 15, Batch 30, Loss: 0.1584
-Epoch 15, Batch 40, Loss: 0.2891
-Epoch 15, Batch 50, Loss: 0.3902
-Epoch 15, Batch 60, Loss: 0.0827
-Epoch 15, Batch 70, Loss: 0.4021
---- Fim da Epoch 15 | Loss Média: 0.1829 ---
-Epoch 16, Batch 10, Loss: 0.1230
-Epoch 16, Batch 20, Loss: 0.2428
-Epoch 16, Batch 30, Loss: 0.3465
-Epoch 16, Batch 40, Loss: 0.3297
-Epoch 16, Batch 50, Loss: 0.2995
-Epoch 16, Batch 60, Loss: 0.3151
-Epoch 16, Batch 70, Loss: 0.0265
---- Fim da Epoch 16 | Loss Média: 0.1656 ---
-Epoch 17, Batch 10, Loss: 0.1988
-Epoch 17, Batch 20, Loss: 0.0377
-Epoch 17, Batch 30, Loss: 0.0911
-Epoch 17, Batch 40, Loss: 0.1867
-Epoch 17, Batch 50, Loss: 0.0821
-Epoch 17, Batch 60, Loss: 0.1062
-Epoch 17, Batch 70, Loss: 0.1635
---- Fim da Epoch 17 | Loss Média: 0.1595 ---
-Epoch 18, Batch 10, Loss: 0.2127
-Epoch 18, Batch 20, Loss: 0.2195
-Epoch 18, Batch 30, Loss: 0.3733
-Epoch 18, Batch 40, Loss: 0.1321
-Epoch 18, Batch 50, Loss: 0.1618
-Epoch 18, Batch 60, Loss: 0.0000
-Epoch 18, Batch 70, Loss: 0.3054
---- Fim da Epoch 18 | Loss Média: 0.1823 ---
-Epoch 19, Batch 10, Loss: 0.4691
-Epoch 19, Batch 20, Loss: 0.2065
-Epoch 19, Batch 30, Loss: 0.1141
-Epoch 19, Batch 40, Loss: 0.2954
-Epoch 19, Batch 50, Loss: 0.0417
-Epoch 19, Batch 60, Loss: 0.0608
-Epoch 19, Batch 70, Loss: 0.0638
---- Fim da Epoch 19 | Loss Média: 0.1597 ---
-Epoch 20, Batch 10, Loss: 0.0408
-Epoch 20, Batch 20, Loss: 0.2056
-Epoch 20, Batch 30, Loss: 0.1005
-Epoch 20, Batch 40, Loss: 0.0104
-Epoch 20, Batch 50, Loss: 0.0114
-Epoch 20, Batch 60, Loss: 0.1438
-Epoch 20, Batch 70, Loss: 0.1087
---- Fim da Epoch 20 | Loss Média: 0.1296 ---
-Epoch 21, Batch 10, Loss: 0.0065
-Epoch 21, Batch 20, Loss: 0.3410
-Epoch 21, Batch 30, Loss: 0.0743
-Epoch 21, Batch 40, Loss: 0.0674
-Epoch 21, Batch 50, Loss: 0.2356
-Epoch 21, Batch 60, Loss: 0.0785
-Epoch 21, Batch 70, Loss: 0.1246
---- Fim da Epoch 21 | Loss Média: 0.1450 ---
-Epoch 22, Batch 10, Loss: 0.2176
-Epoch 22, Batch 20, Loss: 0.1356
-Epoch 22, Batch 30, Loss: 0.0665
-Epoch 22, Batch 40, Loss: 0.1703
-Epoch 22, Batch 50, Loss: 0.1725
-Epoch 22, Batch 60, Loss: 0.1544
-Epoch 22, Batch 70, Loss: 0.2036
---- Fim da Epoch 22 | Loss Média: 0.1277 ---
+Epoch 1, Batch 10, Loss: 2.1017
+Epoch 1, Batch 20, Loss: 2.0313
+Epoch 1, Batch 30, Loss: 1.5184
+Epoch 1, Batch 40, Loss: 0.7958
+Epoch 1, Batch 50, Loss: 1.1875
+Epoch 1, Batch 60, Loss: 1.1158
+Epoch 1, Batch 70, Loss: 0.5239
+--- Fim da Epoch 1 | Loss Média: 1.6979 ---
+Epoch 2, Batch 10, Loss: 0.2470
+Epoch 2, Batch 20, Loss: 0.4740
+Epoch 2, Batch 30, Loss: 0.7227
+Epoch 2, Batch 40, Loss: 0.8620
+Epoch 2, Batch 50, Loss: 0.3689
+Epoch 2, Batch 60, Loss: 0.4626
+Epoch 2, Batch 70, Loss: 0.8389
+--- Fim da Epoch 2 | Loss Média: 0.7119 ---
+Epoch 3, Batch 10, Loss: 0.6045
+Epoch 3, Batch 20, Loss: 0.5300
+Epoch 3, Batch 30, Loss: 0.4708
+Epoch 3, Batch 40, Loss: 0.2977
+Epoch 3, Batch 50, Loss: 0.5473
+Epoch 3, Batch 60, Loss: 0.7806
+Epoch 3, Batch 70, Loss: 0.6960
+--- Fim da Epoch 3 | Loss Média: 0.7197 ---
+Epoch 4, Batch 10, Loss: 0.3934
+Epoch 4, Batch 20, Loss: 0.7704
+Epoch 4, Batch 30, Loss: 0.2768
+Epoch 4, Batch 40, Loss: 0.5261
+Epoch 4, Batch 50, Loss: 0.6868
+Epoch 4, Batch 60, Loss: 1.1498
+Epoch 4, Batch 70, Loss: 0.8042
+--- Fim da Epoch 4 | Loss Média: 0.6697 ---
+Epoch 5, Batch 10, Loss: 0.5504
+Epoch 5, Batch 20, Loss: 0.3729
+Epoch 5, Batch 30, Loss: 0.5129
+Epoch 5, Batch 40, Loss: 0.6700
+Epoch 5, Batch 50, Loss: 0.5757
+Epoch 5, Batch 60, Loss: 0.6463
+Epoch 5, Batch 70, Loss: 0.9382
+--- Fim da Epoch 5 | Loss Média: 0.6124 ---
+Epoch 6, Batch 10, Loss: 0.3189
+Epoch 6, Batch 20, Loss: 0.6032
+Epoch 6, Batch 30, Loss: 0.7755
+Epoch 6, Batch 40, Loss: 0.5828
+Epoch 6, Batch 50, Loss: 0.5850
+Epoch 6, Batch 60, Loss: 0.4755
+Epoch 6, Batch 70, Loss: 0.5838
+--- Fim da Epoch 6 | Loss Média: 0.6110 ---
+Epoch 7, Batch 10, Loss: 0.4144
+Epoch 7, Batch 20, Loss: 0.3518
+Epoch 7, Batch 30, Loss: 0.3350
+Epoch 7, Batch 40, Loss: 0.4864
+Epoch 7, Batch 50, Loss: 0.4125
+Epoch 7, Batch 60, Loss: 0.5897
+Epoch 7, Batch 70, Loss: 0.9316
+--- Fim da Epoch 7 | Loss Média: 0.5644 ---
+Epoch 8, Batch 10, Loss: 1.3626
+Epoch 8, Batch 20, Loss: 0.4822
+Epoch 8, Batch 30, Loss: 0.3933
+Epoch 8, Batch 40, Loss: 0.6252
+Epoch 8, Batch 50, Loss: 0.6477
+Epoch 8, Batch 60, Loss: 0.4625
+Epoch 8, Batch 70, Loss: 0.4667
+--- Fim da Epoch 8 | Loss Média: 0.5549 ---
+Epoch 9, Batch 10, Loss: 0.2727
+Epoch 9, Batch 20, Loss: 0.5873
+Epoch 9, Batch 30, Loss: 0.3751
+Epoch 9, Batch 40, Loss: 0.5370
+Epoch 9, Batch 50, Loss: 0.5796
+Epoch 9, Batch 60, Loss: 0.6239
+Epoch 9, Batch 70, Loss: 0.5998
+--- Fim da Epoch 9 | Loss Média: 0.5560 ---
+Epoch 10, Batch 10, Loss: 0.4439
+Epoch 10, Batch 20, Loss: 0.8223
+Epoch 10, Batch 30, Loss: 0.2426
+Epoch 10, Batch 40, Loss: 0.3048
+Epoch 10, Batch 50, Loss: 0.6719
+Epoch 10, Batch 60, Loss: 0.5404
+Epoch 10, Batch 70, Loss: 0.4392
+--- Fim da Epoch 10 | Loss Média: 0.5661 ---
+Epoch 11, Batch 10, Loss: 0.3749
+Epoch 11, Batch 20, Loss: 0.4825
+Epoch 11, Batch 30, Loss: 0.6930
+Epoch 11, Batch 40, Loss: 1.4822
+Epoch 11, Batch 50, Loss: 0.7451
+Epoch 11, Batch 60, Loss: 0.4678
+Epoch 11, Batch 70, Loss: 0.4578
+--- Fim da Epoch 11 | Loss Média: 0.5833 ---
+Epoch 12, Batch 10, Loss: 0.3829
+Epoch 12, Batch 20, Loss: 0.3929
+Epoch 12, Batch 30, Loss: 0.4468
+Epoch 12, Batch 40, Loss: 0.2840
+Epoch 12, Batch 50, Loss: 0.4129
+Epoch 12, Batch 60, Loss: 0.5113
+Epoch 12, Batch 70, Loss: 0.5902
+--- Fim da Epoch 12 | Loss Média: 0.4725 ---
+Epoch 13, Batch 10, Loss: 0.4742
+Epoch 13, Batch 20, Loss: 0.8134
+Epoch 13, Batch 30, Loss: 0.7130
+Epoch 13, Batch 40, Loss: 0.7708
+Epoch 13, Batch 50, Loss: 0.6785
+Epoch 13, Batch 60, Loss: 0.2527
+Epoch 13, Batch 70, Loss: 0.4849
+--- Fim da Epoch 13 | Loss Média: 0.5609 ---
+Epoch 14, Batch 10, Loss: 0.6945
+Epoch 14, Batch 20, Loss: 0.3173
+Epoch 14, Batch 30, Loss: 0.2873
+Epoch 14, Batch 40, Loss: 0.6760
+Epoch 14, Batch 50, Loss: 0.6290
+Epoch 14, Batch 60, Loss: 0.6910
+Epoch 14, Batch 70, Loss: 0.4429
+--- Fim da Epoch 14 | Loss Média: 0.5372 ---
+Epoch 15, Batch 10, Loss: 0.4333
+Epoch 15, Batch 20, Loss: 0.6477
+Epoch 15, Batch 30, Loss: 0.8747
+Epoch 15, Batch 40, Loss: 0.3943
+Epoch 15, Batch 50, Loss: 0.7145
+Epoch 15, Batch 60, Loss: 0.6448
+Epoch 15, Batch 70, Loss: 0.3702
+--- Fim da Epoch 15 | Loss Média: 0.4880 ---
 [*] Gráfico de Loss salvo em: /home/daniel/desktop/graduacao/deep-learning/project-assignments/deep-learning-pa2/outputs/part2/trilhaB_loss_MOT17.png
 [*] Checkpoint salvo em: /home/daniel/desktop/graduacao/deep-learning/project-assignments/deep-learning-pa2/outputs/part2/appearance_rnn.pth
 Processo da Parte 2 (Trilha B) finalizado com sucesso. Confira a pasta outputs/part2/
