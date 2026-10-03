@@ -134,3 +134,4 @@
   [AppearanceRNN_Simple | T=8 | seed=1] epoch 1/5 loss=3.1634
   [AppearanceRNN_Simple | T=8 | seed=1] epoch 2/5 loss=0.7578
   [AppearanceRNN_Simple | T=8 | seed=1] epoch 3/5 loss=0.4632
+  [AppearanceRNN_Simple | T=8 | seed=1] epoch 4/5 loss=0.3621
